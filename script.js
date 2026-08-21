@@ -186,7 +186,7 @@ const PROJECTS_BY_ID = new Map(PROJECT_CASE_STUDIES.map((project) => [project.id
 
 /* ---------- Interaction state ---------- */
 
-let isAlternateThemeActive = true;
+let isAlternateThemeActive = false;
 let horizontalScrollTarget = 0;
 let scrollAnimationFrameId = null;
 let scrollSnapTimerId = null;

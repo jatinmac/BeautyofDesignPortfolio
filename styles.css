@@ -1019,8 +1019,14 @@ body.is-card-transitioning {
 .intro-card__lead {
   max-width: 470px;
   margin-top: 28px !important;
+  color: rgba(243, 243, 241, 0.76);
   font-size: 19px;
   line-height: 1.5;
+}
+
+.intro-card__lead strong {
+  color: #ffffff;
+  font-weight: 650;
 }
 
 .intro-card__highlights {
@@ -1052,6 +1058,11 @@ body.is-card-transitioning {
   box-shadow: 0 2px 1px rgba(0, 0, 0, 0.38);
   color: #f3f3f1;
   backdrop-filter: none;
+}
+
+.intro-card__highlights strong {
+  color: #ffffff;
+  font-weight: 700;
 }
 
 .intro-card__highlight-visual {

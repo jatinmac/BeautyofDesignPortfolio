@@ -905,10 +905,10 @@ body.is-card-transitioning {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--corner-radius);
-  background: rgba(30, 33, 40, 0.82);
+  background: transparent;
   box-shadow: 0 2px 1px rgba(0, 0, 0, 0.38);
   color: #f3f3f1;
-  backdrop-filter: blur(12px);
+  backdrop-filter: none;
 }
 
 .intro-card__highlight-visual {
@@ -1668,11 +1668,11 @@ body.is-card-transitioning {
 
   .intro-card {
     height: auto;
-    min-height: 560px;
+    min-height: 0;
   }
 
   .intro-card__content {
-    padding: 36px 20px 20px;
+    padding: 20px;
   }
 
   .intro-card h1 {

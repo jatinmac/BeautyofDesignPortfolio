@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#30302f" />
+    <title>Jatin Davis</title>
+
+    <!-- Inter for body text; Nunito for project headings -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&amp;family=Nunito:ital,wght@0,200..1000;1,200..1000&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,100,0,0&amp;icon_names=arrow_back,arrow_forward,dark_mode,light_mode"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <!-- Top navigation controls -->
+      <header class="site-header">
+        <nav class="grid-navigation" aria-label="Grid navigation">
+          <button
+            class="navigation-control"
+            type="button"
+            aria-label="Go to the first grid"
+          >
+            <img
+              class="navigation-logo"
+              src="assets/images/logo.svg"
+              alt=""
+              aria-hidden="true"
+            />
+          </button>
+
+          <div class="navigation-track" aria-label="Choose a grid">
+            <!-- JavaScript fills this layer with cursor-reactive vertical lines. -->
+            <div class="navigation-lines" aria-hidden="true"></div>
+
+            <button
+              class="navigation-target navigation-target--1"
+              type="button"
+              data-grid-index="0"
+              aria-label="Show Intro"
+            >
+              <span class="navigation-label">Intro</span>
+            </button>
+            <button
+              class="navigation-target navigation-target--2"
+              type="button"
+              data-grid-index="1"
+              aria-label="Show Work"
+            >
+              <span class="navigation-label">Work</span>
+            </button>
+            <button
+              class="navigation-target navigation-target--3"
+              type="button"
+              data-grid-index="2"
+              aria-label="Show Builds"
+            >
+              <span class="navigation-label">Builds</span>
+            </button>
+            <button
+              class="navigation-target navigation-target--4"
+              type="button"
+              data-grid-index="3"
+              aria-label="Show About"
+            >
+              <span class="navigation-label">About</span>
+            </button>
+            <button
+              class="navigation-target navigation-target--5"
+              type="button"
+              data-grid-index="4"
+              aria-label="Show More"
+            >
+              <span class="navigation-label">More</span>
+            </button>
+          </div>
+
+          <a
+            class="navigation-end"
+            href="https://drive.google.com/file/d/18CwZfyq9Qq3Bds5iQPKecdr9nTbWVoqL/view?usp=sharing"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open resume"
+          >
+            Resume
+          </a>
+
+          <button
+            class="ball-control"
+            type="button"
+            aria-label="Drop playful balls"
+            title="Drop balls"
+          >
+            <span class="ball-control__orb" aria-hidden="true"></span>
+          </button>
+
+          <button
+            class="theme-control"
+            type="button"
+            aria-label="Switch to light mode"
+            aria-pressed="false"
+          >
+            <span
+              class="material-symbols-outlined theme-icon theme-icon--light"
+              aria-hidden="true"
+            >light_mode</span>
+            <span
+              class="material-symbols-outlined theme-icon theme-icon--dark"
+              aria-hidden="true"
+            >dark_mode</span>
+          </button>
+        </nav>
+      </header>
+
+      <!-- Horizontal card-grid layouts -->
+      <section class="collections" aria-label="Design collections">
+        <!-- Intro: positioning and selected outcomes -->
+        <div class="card-grid card-grid--intro">
+          <article class="card card--static card--no-tilt intro-card">
+            <canvas class="intro-card__particles" aria-hidden="true"></canvas>
+
+            <div class="intro-card__content">
+              <h1>Jatin Davis</h1>
+              <p class="intro-card__lead">
+                AI-native Product Designer working end to end on products and features, and
+                shipping directly to the codebase.
+              </p>
+
+              <ul class="intro-card__highlights">
+                <li>
+                  <span class="intro-card__highlight-visual">
+                    <img src="assets/images/introImages/DoubleAi.png" alt="Double AI" />
+                  </span>
+                  <span>Worked end to end on product features at voice AI startup Double AI, previously Cardtree AI, serving 600+ users.</span>
+                </li>
+                <li>
+                  <span class="intro-card__highlight-visual">
+                    <img src="assets/images/introImages/MarutiSuzukiLogo.png" alt="Suzuki" />
+                  </span>
+                  <span>Shipped product design work at Maruti Suzuki for Brezza and Victoris, with 100,000+ production cars sold.</span>
+                </li>
+                <li>
+                  <span class="intro-card__highlight-visual">
+                    <img src="assets/images/introImages/quilo.png" alt="Quilo" />
+                  </span>
+                  <span>Built and launched the Quilo Chrome extension, reaching 41 users and 680 peak page visits.</span>
+                </li>
+                <li>
+                  <span class="intro-card__highlight-visual">
+                    <img src="assets/images/introImages/Autoflux.webp" alt="AutoFlux" />
+                  </span>
+                  <span>Building AutoFlux.in end to end—an automotive platform for electric and green mobility.</span>
+                </li>
+              </ul>
+            </div>
+          </article>
+        </div>
+
+        <!-- Grid 1: large cards with a small stepped group -->
+        <div class="card-grid card-grid--stepped">
+          <!-- Featured work: Double AI -->
+          <article
+            class="card project-card project-card--featured card--top-left"
+            data-project-id="double-ai"
+            data-project-title="Double AI — AI Twin Agent"
+            tabindex="0"
+          >
+            <div class="project-card__media">
+              <img
+                src="assets/images/projects/double-ai.webp"
+                alt="Double AI product interface"
+              />
+            </div>
+            <h2 class="project-card__title">Double AI — AI Twin Agent</h2>
+            <ul class="project-card__tags" aria-label="Project tags">
+              <li>AI twin</li>
+              <li>AI SaaS</li>
+              <li>Voice agent</li>
+              <li>Identity</li>
+            </ul>
+          </article>
+
+          <!-- Supporting work: AutoFlux -->
+          <article
+            class="card project-card project-card--image-only card--small-top-left"
+            data-project-id="autoflux"
+            data-project-title="AutoFlux.in"
+            tabindex="0"
+          >
+            <div class="project-card__media">
+              <img
+                src="assets/images/projects/autoflux.webp"
+                alt="AutoFlux vehicle platform"
+              />
+            </div>
+            <h2 class="project-card__title">AutoFlux.in</h2>
+            <ul class="project-card__tags" aria-label="Project tags">
+              <li>0→1 product</li>
+              <li>Decision design</li>
+              <li>Automotive data</li>
+              <li>Explainable recommendations</li>
+            </ul>
+          </article>
+
+          <!-- Supporting work: U3K Instrument Cluster -->
+          <article
+            class="card project-card project-card--image-only card--small-top-right"
+            data-project-id="u3k-instrument-cluster"
+            data-project-title="Maruti Suzuki U3K Instrument Cluster"
+            tabindex="0"
+          >
+            <div class="project-card__media">
+              <img
+                src="assets/images/projects/u3k.webp"
+                alt="Maruti Suzuki U3K instrument cluster"
+              />
+            </div>
+            <h2 class="project-card__title">U3K Instrument Cluster</h2>
+            <ul class="project-card__tags" aria-label="Project tags">
+              <li>Automotive HMI</li>
+              <li>Safety-critical UI</li>
+              <li>Hardware constraints</li>
+            </ul>
+          </article>
+
+          <!-- Supporting work: Formula 1 Visual Storytelling -->
+          <article
+            class="card project-card project-card--image-only card--small-step"
+            data-project-id="formula-1-design"
+            data-project-title="Formula 1 Visual Storytelling"
+            tabindex="0"
+          >
+            <div class="project-card__media">
+              <img
+                src="assets/images/projects/formula-1-youtube.webp"
+                alt="Formula 1 visual storytelling project"
+              />
+            </div>
+            <h2 class="project-card__title">Formula 1 Visual Storytelling</h2>
+            <ul class="project-card__tags" aria-label="Project tags">
+              <li>Creative side project</li>
+              <li>AI media</li>
+              <li>Audience growth</li>
+            </ul>
+          </article>
+
+          <!-- Featured work: Quilo -->
+          <article
+            class="card project-card project-card--featured card--bottom-left"
+            data-project-id="quilo"
+            data-project-title="Quilo Chrome Extension"
+            tabindex="0"
+          >
+            <div class="project-card__media">
+              <img
+                src="assets/images/projects/quilo.webp"
+                alt="Quilo Chrome extension interface"
+              />
+            </div>
+            <h2 class="project-card__title">Quilo Chrome Extension</h2>
+            <ul class="project-card__tags" aria-label="Project tags">
+              <li>0→1 product</li>
+              <li>Browser extension</li>
+              <li>Product growth</li>
+            </ul>
+          </article>
+
+          <!-- Featured work: SmartPlay Pro X -->
+          <article
+            class="card project-card project-card--featured card--bottom-right"
+            data-project-id="maruti-suzuki-smartplay"
+            data-project-title="Maruti Suzuki SmartPlay Pro X"
+            tabindex="0"
+          >
+            <div class="project-card__media">
+              <img
+                src="assets/images/projects/maruti-suzuki.webp"
+                alt="Maruti Suzuki SmartPlay Pro X interface"
+              />
+            </div>
+            <h2 class="project-card__title">Maruti Suzuki SmartPlay Pro X</h2>
+            <ul class="project-card__tags" aria-label="Project tags">
+              <li>10.1-inch</li>
+              <li>Infotainment HMI</li>
+              <li>Automotive UI</li>
+            </ul>
+          </article>
+        </div>
+
+        <!-- Grid 2: builds and motion prototypes -->
+        <div class="card-grid card-grid--mosaic">
+          <!-- Featured build: AI Twin -->
+          <article
+            class="card project-card project-card--featured build-card--ai-twin"
+            data-project-title="AI Twin"
+            data-external-url="https://jatindavistwin.vercel.app/"
+            tabindex="0"
+          >
+            <div class="project-card__media">
+              <img src="assets/images/builds/ai-twin.webp" alt="AI Twin workspace" />
+            </div>
+            <h2 class="project-card__title">AI Twin</h2>
+            <ul class="project-card__tags" aria-label="Build tags">
+              <li>AI Twin Workspace</li>
+            </ul>
+          </article>
+
+          <!-- Remaining builds -->
+          <article
+            class="card project-card project-card--image-only build-card--small-1"
+            data-project-title="AI Website"
+            data-external-url="https://websitedesign-ten.vercel.app/"
+            tabindex="0"
+          >
+            <div class="project-card__media">
+              <img src="assets/images/builds/ai-website.webp" alt="AI Website" loading="lazy" />
+            </div>
+            <h2 class="project-card__title">AI Website</h2>
+            <ul class="project-card__tags" aria-label="Build tags"><li>AI-generated web experience</li></ul>
+          </article>
+
+          <article
+            class="card project-card project-card--image-only build-card--small-2"
+            data-project-title="AI UI"
+            data-external-url="https://agenticui.netlify.app/"
+            tabindex="0"
+          >
+            <div class="project-card__media">
+              <img src="assets/images/builds/ai-ui-design-system.webp" alt="AI UI design system" loading="lazy" />
+            </div>
+            <h2 class="project-card__title">AI UI</h2>
+            <ul class="project-card__tags" aria-label="Build tags"><li>Generative UI sandbox</li></ul>
+          </article>
+
+          <article
+            class="card project-card project-card--image-only build-card--small-3"
+            data-project-title="Skills.md"
+            data-external-url="https://aiskillsmd.netlify.app/"
+            tabindex="0"
+          >
+            <div class="project-card__media">
+              <img src="assets/images/builds/skills-md.webp" alt="Skills.md project" loading="lazy" />
+            </div>
+            <h2 class="project-card__title">Skills.md</h2>
+            <ul class="project-card__tags" aria-label="Build tags"><li>Markdown skills portfolio</li></ul>
+          </article>
+
+          <article
+            class="card project-card project-card--image-only build-card--small-4"
+            data-project-title="Relay Design Storybook"
+            data-external-url="https://jatinmac.github.io/relay-design-system/?path=/story/documentation-components--button-documentation"
+            tabindex="0"
+          >
+            <div class="project-card__media">
+              <img src="assets/images/builds/relay-design-system.webp" alt="Relay Storybook documentation" loading="lazy" />
+            </div>
+            <h2 class="project-card__title">Relay Design Storybook</h2>
+            <ul class="project-card__tags" aria-label="Build tags"><li>Component documentation</li></ul>
+          </article>
+
+          <!-- Motion prototypes 1–6 -->
+          <article class="card project-card project-card--image-only motion-prototype-card build-card--small-5" data-project-title="Coinbase Wallet Onboarding" data-external-url="https://www.youtube.com/watch?v=Q40UL5DsQ2Q" tabindex="0">
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/Q40UL5DsQ2Q/hqdefault.jpg" alt="Coinbase Wallet onboarding prototype" loading="lazy" /></div>
+            <h2 class="project-card__title">Coinbase Wallet Onboarding</h2>
+            <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
+          </article>
+
+          <article class="card project-card project-card--image-only motion-prototype-card build-card--small-6" data-project-title="Twitter Like Interaction" data-external-url="https://www.youtube.com/watch?v=ncKi6JwKYfo" tabindex="0">
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/ncKi6JwKYfo/hqdefault.jpg" alt="Twitter like interaction prototype" loading="lazy" /></div>
+            <h2 class="project-card__title">Twitter Like Interaction</h2>
+            <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
+          </article>
+
+          <article class="card project-card project-card--image-only motion-prototype-card build-card--small-7" data-project-title="Google Pay Interaction Design" data-external-url="https://www.youtube.com/watch?v=vJk7V_fACQM" tabindex="0">
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/vJk7V_fACQM/hqdefault.jpg" alt="Google Pay interaction design" loading="lazy" /></div>
+            <h2 class="project-card__title">Google Pay Interaction Design</h2>
+            <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
+          </article>
+
+          <article class="card project-card project-card--image-only motion-prototype-card build-card--small-8" data-project-title="Airbnb iOS Homepage Prototype" data-external-url="https://www.youtube.com/watch?v=JZ1oQVoP3F0" tabindex="0">
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/JZ1oQVoP3F0/hqdefault.jpg" alt="Airbnb iOS homepage prototype" loading="lazy" /></div>
+            <h2 class="project-card__title">Airbnb iOS Homepage Prototype</h2>
+            <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
+          </article>
+
+          <article class="card project-card project-card--image-only motion-prototype-card build-card--small-9" data-project-title="Google Pay Rewards Animation" data-external-url="https://www.youtube.com/watch?v=UhJhaOph0y4" tabindex="0">
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/UhJhaOph0y4/hqdefault.jpg" alt="Google Pay rewards animation" loading="lazy" /></div>
+            <h2 class="project-card__title">Google Pay Rewards Animation</h2>
+            <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
+          </article>
+
+          <article class="card project-card project-card--image-only motion-prototype-card build-card--small-10" data-project-title="Coinbase Wallet Homepage" data-external-url="https://www.youtube.com/watch?v=P8ineV8FnGs" tabindex="0">
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/P8ineV8FnGs/hqdefault.jpg" alt="Coinbase Wallet homepage prototype" loading="lazy" /></div>
+            <h2 class="project-card__title">Coinbase Wallet Homepage</h2>
+            <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
+          </article>
+
+          <!-- Featured build: Relay Design System -->
+          <article
+            class="card project-card project-card--featured build-card--relay-system"
+            data-project-title="Relay Design System"
+            data-external-url="https://github.com/jatinmac/relay-design-system"
+            tabindex="0"
+          >
+            <div class="project-card__media">
+              <img src="assets/images/builds/relay-design-system.webp" alt="Relay Design System" loading="lazy" />
+            </div>
+            <h2 class="project-card__title">Relay Design System</h2>
+            <ul class="project-card__tags" aria-label="Build tags">
+              <li>React design system</li>
+              <li>Replaceable themes</li>
+            </ul>
+          </article>
+
+          <!-- Featured build: WebGL Website -->
+          <article
+            class="card project-card project-card--featured build-card--webgl-featured"
+            data-project-title="WebGL Website"
+            data-external-url="https://jatindavis4.vercel.app/"
+            tabindex="0"
+          >
+            <div class="project-card__media">
+              <img src="assets/images/builds/shader-website.webp" alt="WebGL portfolio website" loading="lazy" />
+            </div>
+            <h2 class="project-card__title">WebGL Website</h2>
+            <ul class="project-card__tags" aria-label="Build tags">
+              <li>WebGL portfolio experience</li>
+            </ul>
+          </article>
+
+          <!-- Motion prototypes 7–10 -->
+          <article class="card project-card project-card--image-only motion-prototype-card build-card--small-11" data-project-title="Spotify iOS Homepage" data-external-url="https://www.youtube.com/watch?v=WWZzCqce5yI" tabindex="0">
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/WWZzCqce5yI/hqdefault.jpg" alt="Spotify iOS homepage prototype" loading="lazy" /></div>
+            <h2 class="project-card__title">Spotify iOS Homepage</h2>
+            <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
+          </article>
+
+          <article class="card project-card project-card--image-only motion-prototype-card build-card--small-12" data-project-title="Figma Variables Prototype" data-external-url="https://www.youtube.com/watch?v=FGRbglVqUfo" tabindex="0">
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/FGRbglVqUfo/hqdefault.jpg" alt="Figma Variables prototype" loading="lazy" /></div>
+            <h2 class="project-card__title">Figma Variables Prototype</h2>
+            <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
+          </article>
+
+          <article class="card project-card project-card--image-only motion-prototype-card build-card--small-13" data-project-title="Navi Payments App" data-external-url="https://www.youtube.com/watch?v=CQaTDPNtn7U" tabindex="0">
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/CQaTDPNtn7U/hqdefault.jpg" alt="Navi Payments app prototype" loading="lazy" /></div>
+            <h2 class="project-card__title">Navi Payments App</h2>
+            <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
+          </article>
+
+          <article class="card project-card project-card--image-only motion-prototype-card build-card--small-14" data-project-title="Virtual Dress Try-On App" data-external-url="https://www.youtube.com/watch?v=LZ9FrISExNc" tabindex="0">
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/LZ9FrISExNc/hqdefault.jpg" alt="Virtual dress try-on app prototype" loading="lazy" /></div>
+            <h2 class="project-card__title">Virtual Dress Try-On App</h2>
+            <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
+          </article>
+
+          <button
+            class="card card--static prototype-toggle"
+            type="button"
+            aria-expanded="false"
+          >
+            <span class="prototype-toggle__text">
+              <span class="prototype-toggle__title">Motion prototypes</span>
+              <span class="prototype-toggle__count">10 projects</span>
+            </span>
+            <span class="material-symbols-outlined prototype-toggle__icon" aria-hidden="true">
+              arrow_forward
+            </span>
+          </button>
+        </div>
+
+        <!-- Grid 3: about, experience, skills, and interests -->
+        <div class="card-grid card-grid--four-cards">
+          <article class="card card--static card--no-tilt about-card about-card--profile">
+            <span class="about-card__eyebrow">About</span>
+            <p class="about-card__lead">
+              I am an architect turned product designer. Fascinated by industrial design and GUI,
+              I completed a master’s in design at Jamia Millia Islamia, New Delhi, after earning an
+              AIR of 164 in CEED Open ’22. After completing my master’s, I joined Maruti Suzuki India
+              as a product designer.
+            </p>
+            <span class="about-card__footer">Architect → Product Designer</span>
+          </article>
+
+          <article class="card card--static card--no-tilt about-card about-card--education">
+            <span class="about-card__eyebrow">Education</span>
+            <ul class="about-card__list">
+              <li><span>Master of Design, Product Design</span><small>Jamia Millia Islamia · New Delhi</small></li>
+              <li><span>Bachelor of Architecture</span><small>Guru Gobind Singh Indraprastha University · New Delhi</small></li>
+            </ul>
+          </article>
+
+          <article class="card card--static card--no-tilt about-card about-card--experience">
+            <span class="about-card__eyebrow">Experience</span>
+            <ul class="about-card__list">
+              <li><span>AutoFlux.in</span><small>Founder, Product Designer &amp; Builder</small></li>
+              <li><span>Cardtree AI (Double AI)</span><small>Product Designer</small></li>
+              <li><span>Quilo</span><small>Founder, Product Designer &amp; Builder</small></li>
+              <li><span>Maruti Suzuki</span><small>Product Designer</small></li>
+              <li><span>Formula 1 YouTube Channel</span><small>Creator &amp; Founder</small></li>
+            </ul>
+          </article>
+
+          <article class="card card--static card--no-tilt about-card about-card--skills-primary">
+            <span class="about-card__eyebrow">Skills · Think &amp; Design</span>
+            <div class="about-card__skill-groups">
+              <section>
+                <h2>Think</h2>
+                <p>Product thinking · User journeys · Information architecture · User research · Design strategy</p>
+              </section>
+              <section>
+                <h2>Design</h2>
+                <p>Interaction design · Visual design · Wireframing · Prototyping · Motion design · Design systems</p>
+              </section>
+            </div>
+          </article>
+
+          <article class="card card--static card--no-tilt about-card about-card--skills-secondary">
+            <span class="about-card__eyebrow">Skills · Build, Tools &amp; AI</span>
+            <div class="about-card__skill-groups">
+              <section><h2>Build</h2><p>React · Next.js · TypeScript · HTML &amp; CSS · GitHub · APIs</p></section>
+              <section><h2>Tools</h2><p>Figma · Storybook · Cursor · Codex · Chrome DevTools</p></section>
+              <section><h2>AI</h2><p>AI prototyping · AI agents · LLMs · RAG · MCP · Generative AI</p></section>
+            </div>
+          </article>
+
+          <article class="card card--static card--no-tilt about-card about-card--interests">
+            <span class="about-card__eyebrow">Interests and hobbies</span>
+            <div class="about-card__collage">
+              <figure><img src="assets/images/about/running.avif" alt="Running" loading="lazy" /><figcaption>I love running</figcaption></figure>
+              <figure><img src="assets/images/about/car-enthusiast.avif" alt="Car" loading="lazy" /><figcaption>Car enthusiast</figcaption></figure>
+              <figure><img src="assets/images/about/formula-1.webp" alt="Formula 1" loading="lazy" /><figcaption>Formula 1 nerd</figcaption></figure>
+              <figure><img src="assets/images/about/80s-music.webp" alt="Music" loading="lazy" /><figcaption>’80s music</figcaption></figure>
+              <figure><img src="assets/images/about/bike.webp" alt="Motorcycle" loading="lazy" /><figcaption>Bike lover</figcaption></figure>
+              <figure><img src="assets/images/about/dragon-ball-z.webp" alt="Dragon Ball Z" loading="lazy" /><figcaption>Dragon Ball Z</figcaption></figure>
+              <figure><img src="assets/images/about/marvel-dc.webp" alt="Marvel and DC" loading="lazy" /><figcaption>Marvel &amp; DC</figcaption></figure>
+              <figure><img src="assets/images/about/motogp.webp" alt="MotoGP" loading="lazy" /><figcaption>MotoGP fan</figcaption></figure>
+              <figure><img src="assets/images/about/watches.webp" alt="Watch" loading="lazy" /><figcaption>Watch lover</figcaption></figure>
+              <figure><img src="assets/images/about/wwe.webp" alt="WWE" loading="lazy" /><figcaption>WWE fan</figcaption></figure>
+            </div>
+          </article>
+        </div>
+
+        <!-- Grid 4: certifications, achievements, and contact details -->
+        <div class="card-grid card-grid--more">
+          <article class="card card--static card--no-tilt more-card more-card--certifications">
+            <header class="more-card__header">
+              <span class="more-card__eyebrow">Certifications</span>
+              <span class="more-card__count">06</span>
+            </header>
+
+            <ol class="more-card__list certification-list">
+              <li>
+                <span>Google UX Design</span>
+                <small>Coursera</small>
+              </li>
+              <li>
+                <span>Meta Front-End Developer</span>
+                <small>Coursera</small>
+              </li>
+              <li>
+                <span>The Complete JavaScript Course</span>
+                <small>Udemy · Jonas Schmedtmann</small>
+              </li>
+              <li>
+                <span>The Ultimate React Course</span>
+                <small>Udemy · Jonas Schmedtmann</small>
+              </li>
+              <li>
+                <span>Build Responsive Real-World Websites with HTML and CSS</span>
+                <small>Udemy · Jonas Schmedtmann</small>
+              </li>
+              <li>
+                <span>Understanding TypeScript</span>
+                <small>Udemy · Maximilian Schwarzmüller</small>
+              </li>
+            </ol>
+          </article>
+
+          <article class="card card--static card--no-tilt more-card more-card--achievements">
+            <header class="more-card__header">
+              <span class="more-card__eyebrow">Achievements</span>
+              <span class="more-card__count">07</span>
+            </header>
+
+            <ol class="more-card__list achievement-list">
+              <li>Placed at Maruti Suzuki India after completing my master’s in design.</li>
+              <li>Conceived, designed, built, and launched the Quilo Chrome extension.</li>
+              <li>Developed a Formula 1 content direction that grew a channel to 1.45M+ lifetime views and 1,000 subscribers.</li>
+              <li>Built a Figma plugin used by 474 people.</li>
+              <li>Achieved an All India Rank of 164 in CEED 2022, Open category.</li>
+              <li>Interviewed at IIT Delhi, IIT Bombay, and IIT Roorkee.</li>
+              <li>Reduced my weight from 96 kg to 70 kg.</li>
+            </ol>
+          </article>
+
+          <article class="card card--static card--no-tilt more-card more-card--contact">
+            <header class="more-card__header">
+              <span class="more-card__eyebrow">Contact</span>
+            </header>
+
+            <p class="more-card__contact-intro">
+              Let’s talk about products, design systems, AI, or an interesting idea.
+            </p>
+
+            <nav class="contact-links" aria-label="Contact and social links">
+              <a href="mailto:Jatindavis5@gmail.com">
+                <span>Email</span>
+                <small>Jatindavis5@gmail.com</small>
+              </a>
+              <a href="tel:+918920152733">
+                <span>Phone</span>
+                <small>+91 89201 52733</small>
+              </a>
+              <a
+                href="https://www.linkedin.com/in/jatin-davis-b5a256136"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span>LinkedIn</span>
+                <small>View profile ↗</small>
+              </a>
+              <a
+                href="https://www.youtube.com/@formula1design"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span>YouTube</span>
+                <small>Formula 1 Design ↗</small>
+              </a>
+              <a
+                href="https://drive.google.com/file/d/18CwZfyq9Qq3Bds5iQPKecdr9nTbWVoqL/view?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span>Resume</span>
+                <small>Open PDF ↗</small>
+              </a>
+            </nav>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <!-- Card detail page; its content will be added as individual cards are defined. -->
+    <main class="detail-page" aria-label="Project details" hidden>
+      <div class="detail-page__inner">
+        <button class="detail-back-button" type="button" aria-label="Back to grids">
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+        </button>
+
+        <article class="detail-content" aria-label="Selected project content"></article>
+      </div>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -186,7 +186,7 @@ const PROJECTS_BY_ID = new Map(PROJECT_CASE_STUDIES.map((project) => [project.id
 
 /* ---------- Interaction state ---------- */
 
-let isAlternateThemeActive = false;
+let isAlternateThemeActive = true;
 let horizontalScrollTarget = 0;
 let scrollAnimationFrameId = null;
 let scrollSnapTimerId = null;
@@ -1359,21 +1359,25 @@ function burstWelcomeConfetti() {
   const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
-  const colors = ['#ff3b5c', '#ffca3a', '#22c55e', '#4cc9f0', '#8b5cf6', '#ff7a00', '#f72585'];
-  const particleCount = mobileLayoutPreference.matches ? 110 : 180;
+  const confettiColor = pageRoot.classList.contains('is-light-theme') ? '#000000' : '#ffffff';
+  const particleCount = mobileLayoutPreference.matches ? 320 : 700;
+  const pulseCount = 5;
+  const particlesPerPulse = particleCount / pulseCount;
   const particles = Array.from({ length: particleCount }, (_, index) => {
     const launchesFromLeft = index % 2 === 0;
+    const pulseIndex = Math.floor(index / particlesPerPulse);
 
     return {
-      x: viewportWidth * (launchesFromLeft ? 0.18 : 0.82),
-      y: viewportHeight * (0.7 + Math.random() * 0.08),
-      velocityX: (launchesFromLeft ? 1 : -1) * (3.5 + Math.random() * 7.5),
-      velocityY: -9 - Math.random() * 9,
+      x: launchesFromLeft ? -12 : viewportWidth + 12,
+      y: viewportHeight * (0.32 + Math.random() * 0.58),
+      launchDelay: pulseIndex * 240 + Math.random() * 45,
+      velocityX: (launchesFromLeft ? 1 : -1) * (7 + Math.random() * 15),
+      velocityY: -7 - Math.random() * 15,
       width: 5 + Math.random() * 7,
       height: 3 + Math.random() * 5,
       rotation: Math.random() * Math.PI * 2,
       rotationSpeed: (Math.random() - 0.5) * 0.38,
-      color: colors[index % colors.length]
+      color: confettiColor
     };
   });
   const animationDuration = 2800;
@@ -1400,6 +1404,8 @@ function burstWelcomeConfetti() {
     context.globalAlpha = opacity;
 
     particles.forEach((particle) => {
+      if (elapsed < particle.launchDelay) return;
+
       particle.velocityX *= 0.992 ** frameScale;
       particle.velocityY += 0.19 * frameScale;
       particle.x += particle.velocityX * frameScale;
@@ -1458,13 +1464,15 @@ function showWelcomeToast() {
   function removeToast() {
     clearTimeout(removalTimer);
     toast.classList.remove('is-visible');
-    window.setTimeout(() => toast.remove(), reducedMotionPreference.matches ? 0 : 420);
+    window.setTimeout(() => toast.remove(), reducedMotionPreference.matches ? 0 : 650);
   }
 
   closeButton.addEventListener('click', removeToast);
   toast.append(title, message, closeButton);
   document.body.append(toast);
-  requestAnimationFrame(() => toast.classList.add('is-visible'));
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+  });
   removalTimer = window.setTimeout(removeToast, 5200);
 }
 

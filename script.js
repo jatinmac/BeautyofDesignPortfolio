@@ -594,7 +594,7 @@ function renderCaseStudy(project) {
   const externalAction = project.liveUrl ? `
     <a class="case-study__action" href="${escapeHtml(project.liveUrl)}" target="_blank" rel="noopener noreferrer">
       <span>${escapeHtml(project.linkText || 'View live product')}</span>
-      <span aria-hidden="true">↗</span>
+      <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
     </a>
   ` : '';
 
@@ -882,6 +882,7 @@ function setBallControlMode(mode) {
   const isLightningMode = mode === 'lightning';
 
   ballButton.classList.toggle('is-lightning', isLightningMode);
+  ballButton.querySelector('.ball-control__orb').textContent = isLightningMode ? 'bolt' : 'circle';
   ballButton.dataset.effectMode = mode;
   ballButton.setAttribute(
     'aria-label',
@@ -1346,4 +1347,139 @@ cards.forEach((card) => {
     card.style.setProperty('--rx', '0deg');
     card.style.setProperty('--ry', '0deg');
   });
+});
+
+/* ---------- Landing confetti and welcome toast ---------- */
+
+let hasPlayedWelcomeCelebration = false;
+
+function burstWelcomeConfetti() {
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const colors = ['#ff3b5c', '#ffca3a', '#22c55e', '#4cc9f0', '#8b5cf6', '#ff7a00', '#f72585'];
+  const particleCount = mobileLayoutPreference.matches ? 110 : 180;
+  const particles = Array.from({ length: particleCount }, (_, index) => {
+    const launchesFromLeft = index % 2 === 0;
+
+    return {
+      x: viewportWidth * (launchesFromLeft ? 0.18 : 0.82),
+      y: viewportHeight * (0.7 + Math.random() * 0.08),
+      velocityX: (launchesFromLeft ? 1 : -1) * (3.5 + Math.random() * 7.5),
+      velocityY: -9 - Math.random() * 9,
+      width: 5 + Math.random() * 7,
+      height: 3 + Math.random() * 5,
+      rotation: Math.random() * Math.PI * 2,
+      rotationSpeed: (Math.random() - 0.5) * 0.38,
+      color: colors[index % colors.length]
+    };
+  });
+  const animationDuration = 2800;
+  const fadeDuration = 600;
+  const startedAt = performance.now();
+  let previousFrame = startedAt;
+
+  canvas.className = 'welcome-confetti';
+  canvas.setAttribute('aria-hidden', 'true');
+  canvas.width = Math.round(viewportWidth * pixelRatio);
+  canvas.height = Math.round(viewportHeight * pixelRatio);
+  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  document.body.append(canvas);
+
+  function animateConfetti(now) {
+    const elapsed = now - startedAt;
+    const frameScale = Math.min(2, (now - previousFrame) / 16.67);
+    const opacity = elapsed > animationDuration - fadeDuration
+      ? Math.max(0, (animationDuration - elapsed) / fadeDuration)
+      : 1;
+
+    previousFrame = now;
+    context.clearRect(0, 0, viewportWidth, viewportHeight);
+    context.globalAlpha = opacity;
+
+    particles.forEach((particle) => {
+      particle.velocityX *= 0.992 ** frameScale;
+      particle.velocityY += 0.19 * frameScale;
+      particle.x += particle.velocityX * frameScale;
+      particle.y += particle.velocityY * frameScale;
+      particle.rotation += particle.rotationSpeed * frameScale;
+
+      context.save();
+      context.translate(particle.x, particle.y);
+      context.rotate(particle.rotation);
+      context.fillStyle = particle.color;
+      context.fillRect(
+        -particle.width / 2,
+        -particle.height / 2,
+        particle.width,
+        particle.height
+      );
+      context.restore();
+    });
+
+    context.globalAlpha = 1;
+
+    if (elapsed < animationDuration) {
+      requestAnimationFrame(animateConfetti);
+      return;
+    }
+
+    canvas.remove();
+  }
+
+  requestAnimationFrame(animateConfetti);
+}
+
+function showWelcomeToast() {
+  const toast = document.createElement('aside');
+  const title = document.createElement('strong');
+  const message = document.createElement('p');
+  const closeButton = document.createElement('button');
+  const closeIcon = document.createElement('span');
+  let removalTimer;
+
+  toast.className = 'welcome-toast';
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
+  title.className = 'welcome-toast__title';
+  title.textContent = 'Welcome to my portfolio!';
+  message.className = 'welcome-toast__message';
+  message.textContent = 'Glad you’re here — explore my work, builds, and story.';
+  closeButton.className = 'welcome-toast__close';
+  closeButton.type = 'button';
+  closeButton.setAttribute('aria-label', 'Dismiss welcome message');
+  closeIcon.className = 'material-symbols-outlined';
+  closeIcon.setAttribute('aria-hidden', 'true');
+  closeIcon.textContent = 'close';
+  closeButton.append(closeIcon);
+
+  function removeToast() {
+    clearTimeout(removalTimer);
+    toast.classList.remove('is-visible');
+    window.setTimeout(() => toast.remove(), reducedMotionPreference.matches ? 0 : 420);
+  }
+
+  closeButton.addEventListener('click', removeToast);
+  toast.append(title, message, closeButton);
+  document.body.append(toast);
+  requestAnimationFrame(() => toast.classList.add('is-visible'));
+  removalTimer = window.setTimeout(removeToast, 5200);
+}
+
+function playWelcomeCelebration() {
+  if (hasPlayedWelcomeCelebration || gridPage.hidden) return;
+
+  hasPlayedWelcomeCelebration = true;
+
+  if (!reducedMotionPreference.matches) {
+    burstWelcomeConfetti();
+  }
+
+  window.setTimeout(showWelcomeToast, reducedMotionPreference.matches ? 0 : 650);
+}
+
+window.addEventListener('load', () => {
+  window.setTimeout(playWelcomeCelebration, 2000);
 });

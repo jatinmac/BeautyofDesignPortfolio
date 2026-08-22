@@ -39,7 +39,7 @@ const PROJECT_CASE_STUDIES = [
   {
     id: 'double-ai',
     number: '01',
-    title: 'Double AI — AI Twin Agent',
+    title: 'Double AI — Voice AI Agent',
     description: 'Case study: designing Double AI’s agentic platform across AI Twin Agents, voice, onboarding, analytics, workflow automation, billing, and referrals.',
     subtitle: 'Designing an agentic platform that turns professional identity into an interactive AI Twin.',
     image: 'assets/images/projects/double-ai.webp',
@@ -191,6 +191,12 @@ let horizontalScrollTarget = 0;
 let scrollAnimationFrameId = null;
 let scrollSnapTimerId = null;
 let isCardTransitionActive = false;
+
+const PROJECT_TRANSITION_TIMING = Object.freeze({
+  lift: 150,
+  morph: 760,
+  fallbackReveal: 320
+});
 
 /* ---------- Intro particle-to-type motion ---------- */
 
@@ -671,33 +677,86 @@ function renderCaseStudy(project) {
   `;
 }
 
-function showCardDetail(projectId, projectTitle, addToBrowserHistory = true) {
+function populateCardDetail(projectId, projectTitle) {
   const project = PROJECTS_BY_ID.get(projectId);
 
-  gridPage.hidden = true;
-  detailPage.hidden = false;
   detailContent.dataset.projectId = projectId;
   detailContent.setAttribute('aria-label', `${projectTitle} content`);
   detailContent.innerHTML = project
     ? renderCaseStudy(project)
     : '<div class="case-study__missing"><h1>Project details coming soon.</h1></div>';
 
-  document.title = project ? `${project.title} — Beauty of Design` : 'Beauty of Design';
+  return project;
+}
+
+function commitCardDetail(projectId, projectTitle, addToBrowserHistory = true) {
+  const project = PROJECTS_BY_ID.get(projectId);
+
   window.scrollTo({ top: 0, behavior: 'auto' });
+  gridPage.hidden = true;
+  detailPage.hidden = false;
+  detailPage.removeAttribute('aria-hidden');
+  document.title = 'Jatin Davis';
 
   if (addToBrowserHistory) {
     history.pushState({ projectId }, '', `#work/${projectId}`);
   }
 }
 
+function showCardDetail(projectId, projectTitle, addToBrowserHistory = true) {
+  populateCardDetail(projectId, projectTitle);
+  commitCardDetail(projectId, projectTitle, addToBrowserHistory);
+}
+
 function showGridPage() {
   detailPage.hidden = true;
+  detailPage.removeAttribute('aria-hidden');
   gridPage.hidden = false;
-  document.title = 'Beauty of Design';
+  document.title = 'Jatin Davis';
   window.scrollTo({ top: 0, behavior: 'auto' });
 }
 
-async function flipAndExpandCard(card, projectId, projectTitle) {
+function createCardTransitionTarget() {
+  const detailBounds = detailContent.getBoundingClientRect();
+  const detailRadius = Number.parseFloat(getComputedStyle(detailContent).borderTopLeftRadius) || 8;
+  const target = document.createElement('div');
+
+  target.className = 'card-transition-target';
+  target.setAttribute('aria-hidden', 'true');
+  target.style.viewTransitionName = 'project-surface';
+  Object.assign(target.style, {
+    top: `${detailBounds.top}px`,
+    left: `${detailBounds.left}px`,
+    width: `${detailBounds.width}px`,
+    height: `${Math.max(
+      1,
+      window.innerHeight - detailBounds.top + (mobileLayoutPreference.matches ? 20 : 32)
+    )}px`,
+    borderRadius: `${detailRadius}px`
+  });
+
+  document.body.append(target);
+  return target;
+}
+
+async function revealProjectWithoutViewTransition(projectId, projectTitle) {
+  populateCardDetail(projectId, projectTitle);
+  commitCardDetail(projectId, projectTitle);
+
+  const revealAnimation = detailPage.animate([
+    { opacity: 0, transform: 'translate3d(0, 8px, 0) scale(0.996)' },
+    { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' }
+  ], {
+    duration: PROJECT_TRANSITION_TIMING.fallbackReveal,
+    easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+    fill: 'both'
+  });
+
+  await revealAnimation.finished.catch(() => undefined);
+  revealAnimation.cancel();
+}
+
+async function morphCardIntoDetail(card, projectId, projectTitle) {
   if (isCardTransitionActive) return;
 
   if (reducedMotionPreference.matches) {
@@ -707,102 +766,81 @@ async function flipAndExpandCard(card, projectId, projectTitle) {
 
   isCardTransitionActive = true;
 
-  const cardBounds = card.getBoundingClientRect();
-  const cardRadius = getComputedStyle(card).borderRadius;
-  const shell = document.createElement('div');
-  const inner = document.createElement('div');
-  const front = card.cloneNode(true);
-  const back = document.createElement('div');
+  const cardStyles = getComputedStyle(card);
+  const cardRadius = Number.parseFloat(cardStyles.borderTopLeftRadius) || 8;
+  const raisedRadius = Math.max(cardRadius, Math.min(18, cardRadius + 8));
+  const baseTransform = cardStyles.transform === 'none'
+    ? 'translate3d(0, 0, 0)'
+    : cardStyles.transform;
+  const previousWillChange = card.style.willChange;
+  let liftAnimation;
+  let transitionTarget;
+  let hasCommittedDetail = false;
 
-  shell.className = 'card-transition-shell';
-  inner.className = 'card-transition__inner';
-  front.classList.add('card-transition__face', 'card-transition__face--front');
-  front.classList.remove('is-entering');
-  front.removeAttribute('role');
-  front.removeAttribute('tabindex');
-  front.removeAttribute('aria-label');
-  back.className = 'card-transition__face card-transition__face--back';
-
-  shell.setAttribute('aria-hidden', 'true');
-  Object.assign(shell.style, {
-    top: `${cardBounds.top}px`,
-    left: `${cardBounds.left}px`,
-    width: `${cardBounds.width}px`,
-    height: `${cardBounds.height}px`,
-    borderRadius: cardRadius
-  });
-
-  inner.append(front, back);
-  shell.append(inner);
-  document.body.append(shell);
-  card.classList.add('is-transition-source');
+  pageRoot.style.setProperty('--project-transition-raised-radius', `${raisedRadius}px`);
+  pageRoot.style.setProperty('--project-transition-duration', `${PROJECT_TRANSITION_TIMING.morph}ms`);
+  pageRoot.classList.add('is-project-view-transition');
   document.body.classList.add('is-card-transitioning');
+  card.style.willChange = 'transform, border-radius, box-shadow';
 
   try {
-    await shell.animate([
+    liftAnimation = card.animate([
       {
-        transform: 'translateY(0) scale(1)',
-        filter: 'drop-shadow(0 0 0 rgba(0, 0, 0, 0))'
+        borderRadius: `${cardRadius}px`,
+        boxShadow: cardStyles.boxShadow,
+        transform: baseTransform
       },
       {
-        transform: 'translateY(-14px) scale(1.025)',
-        filter: 'drop-shadow(0 16px 22px rgba(0, 0, 0, 0.22))'
+        borderRadius: `${raisedRadius}px`,
+        boxShadow: 'inset 0 -1px 0 rgba(0, 0, 0, 0.12), 0 24px 54px rgba(0, 0, 0, 0.3)',
+        transform: `${baseTransform} translate3d(0, -11px, 0) scale(1.018)`
       }
     ], {
-      duration: 300,
-      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      duration: PROJECT_TRANSITION_TIMING.lift,
+      easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
       fill: 'forwards'
-    }).finished;
+    });
 
-    await inner.animate([
-      { transform: 'rotateY(0deg)' },
-      { transform: 'rotateY(180deg)' }
-    ], {
-      duration: 460,
-      easing: 'cubic-bezier(0.65, 0, 0.35, 1)',
-      fill: 'forwards'
-    }).finished;
+    await liftAnimation.finished.catch(() => undefined);
 
-    await shell.animate([
-      {
-        top: `${cardBounds.top}px`,
-        left: `${cardBounds.left}px`,
-        width: `${cardBounds.width}px`,
-        height: `${cardBounds.height}px`,
-        borderRadius: cardRadius,
-        transform: 'translateY(-14px) scale(1.025)',
-        filter: 'drop-shadow(0 16px 22px rgba(0, 0, 0, 0.22))'
-      },
-      {
-        top: '0px',
-        left: '0px',
-        width: '100vw',
-        height: '100vh',
-        borderRadius: '0px',
-        transform: 'translateY(0) scale(1)',
-        filter: 'drop-shadow(0 0 0 rgba(0, 0, 0, 0))'
-      }
-    ], {
-      duration: 640,
-      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-      fill: 'forwards'
-    }).finished;
+    if (typeof document.startViewTransition !== 'function') {
+      await revealProjectWithoutViewTransition(projectId, projectTitle);
+      hasCommittedDetail = true;
+      return;
+    }
 
-    showCardDetail(projectId, projectTitle);
+    card.style.viewTransitionName = 'project-surface';
 
-    await shell.animate([
-      { opacity: 1 },
-      { opacity: 0 }
-    ], {
-      duration: 160,
-      easing: 'ease-out',
-      fill: 'forwards'
-    }).finished;
+    const pageTransition = document.startViewTransition(() => {
+      populateCardDetail(projectId, projectTitle);
+      commitCardDetail(projectId, projectTitle);
+      hasCommittedDetail = true;
+      transitionTarget = createCardTransitionTarget();
+    });
+
+    await pageTransition.finished.catch(() => undefined);
   } finally {
-    shell.remove();
-    card.classList.remove('is-transition-source');
-    document.body.classList.remove('is-card-transitioning');
-    isCardTransitionActive = false;
+    try {
+      if (!hasCommittedDetail) {
+        populateCardDetail(projectId, projectTitle);
+        commitCardDetail(projectId, projectTitle);
+      }
+    } finally {
+      liftAnimation?.cancel();
+      transitionTarget?.remove();
+      card.style.removeProperty('view-transition-name');
+      if (previousWillChange) {
+        card.style.willChange = previousWillChange;
+      } else {
+        card.style.removeProperty('will-change');
+      }
+      pageRoot.style.removeProperty('--project-transition-raised-radius');
+      pageRoot.style.removeProperty('--project-transition-duration');
+      pageRoot.classList.remove('is-project-view-transition');
+      document.body.classList.remove('is-card-transitioning');
+      isCardTransitionActive = false;
+      detailBackButton.focus({ preventScroll: true });
+    }
   }
 }
 
@@ -820,7 +858,7 @@ cards.forEach((card, cardIndex) => {
       return;
     }
 
-    flipAndExpandCard(card, projectId, projectTitle);
+    morphCardIntoDetail(card, projectId, projectTitle);
   }
 
   card.setAttribute('role', 'link');

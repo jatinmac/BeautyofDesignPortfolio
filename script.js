@@ -195,6 +195,18 @@ let isCardTransitionActive = false;
 /* ---------- Intro particle-to-type motion ---------- */
 
 let introParticleAnimationFrameId = null;
+let hasCompletedInitialIntroAnimation = false;
+let resolveInitialIntroAnimation;
+const initialIntroAnimationComplete = new Promise((resolve) => {
+  resolveInitialIntroAnimation = resolve;
+});
+
+function markInitialIntroAnimationComplete() {
+  if (hasCompletedInitialIntroAnimation) return;
+
+  hasCompletedInitialIntroAnimation = true;
+  resolveInitialIntroAnimation();
+}
 
 function smootherStep(progress) {
   const clampedProgress = Math.min(1, Math.max(0, progress));
@@ -272,6 +284,7 @@ function playIntroParticleMerge() {
   if (reducedMotionPreference.matches || gridPage.hidden) {
     introParticleCanvas.hidden = true;
     introTitle.style.removeProperty('opacity');
+    markInitialIntroAnimationComplete();
     return;
   }
 
@@ -367,6 +380,7 @@ function playIntroParticleMerge() {
     introParticleCanvas.style.removeProperty('opacity');
     introTitle.style.removeProperty('transition');
     introTitle.style.removeProperty('opacity');
+    markInitialIntroAnimationComplete();
   }
 
   introParticleAnimationFrameId = requestAnimationFrame(animateIntroParticles);
@@ -1352,6 +1366,12 @@ cards.forEach((card) => {
 /* ---------- Landing confetti and welcome toast ---------- */
 
 let hasPlayedWelcomeCelebration = false;
+const introToConfettiDelay = 2000;
+const confettiToToastDelay = 300;
+
+function waitForAnimationSequence(delay) {
+  return new Promise((resolve) => window.setTimeout(resolve, delay));
+}
 
 function burstWelcomeConfetti() {
   const canvas = document.createElement('canvas');
@@ -1392,50 +1412,57 @@ function burstWelcomeConfetti() {
   context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
   document.body.append(canvas);
 
-  function animateConfetti(now) {
-    const elapsed = now - startedAt;
-    const frameScale = Math.min(2, (now - previousFrame) / 16.67);
-    const opacity = elapsed > animationDuration - fadeDuration
-      ? Math.max(0, (animationDuration - elapsed) / fadeDuration)
-      : 1;
-
-    previousFrame = now;
-    context.clearRect(0, 0, viewportWidth, viewportHeight);
-    context.globalAlpha = opacity;
-
-    particles.forEach((particle) => {
-      if (elapsed < particle.launchDelay) return;
-
-      particle.velocityX *= 0.992 ** frameScale;
-      particle.velocityY += 0.19 * frameScale;
-      particle.x += particle.velocityX * frameScale;
-      particle.y += particle.velocityY * frameScale;
-      particle.rotation += particle.rotationSpeed * frameScale;
-
-      context.save();
-      context.translate(particle.x, particle.y);
-      context.rotate(particle.rotation);
-      context.fillStyle = particle.color;
-      context.fillRect(
-        -particle.width / 2,
-        -particle.height / 2,
-        particle.width,
-        particle.height
-      );
-      context.restore();
-    });
-
-    context.globalAlpha = 1;
-
-    if (elapsed < animationDuration) {
-      requestAnimationFrame(animateConfetti);
-      return;
+  return new Promise((resolve) => {
+    function finishConfetti() {
+      canvas.remove();
+      resolve();
     }
 
-    canvas.remove();
-  }
+    function runConfettiFrame(now) {
+      const elapsed = now - startedAt;
+      const frameScale = Math.min(2, (now - previousFrame) / 16.67);
+      const opacity = elapsed > animationDuration - fadeDuration
+        ? Math.max(0, (animationDuration - elapsed) / fadeDuration)
+        : 1;
 
-  requestAnimationFrame(animateConfetti);
+      previousFrame = now;
+      context.clearRect(0, 0, viewportWidth, viewportHeight);
+      context.globalAlpha = opacity;
+
+      particles.forEach((particle) => {
+        if (elapsed < particle.launchDelay) return;
+
+        particle.velocityX *= 0.992 ** frameScale;
+        particle.velocityY += 0.19 * frameScale;
+        particle.x += particle.velocityX * frameScale;
+        particle.y += particle.velocityY * frameScale;
+        particle.rotation += particle.rotationSpeed * frameScale;
+
+        context.save();
+        context.translate(particle.x, particle.y);
+        context.rotate(particle.rotation);
+        context.fillStyle = particle.color;
+        context.fillRect(
+          -particle.width / 2,
+          -particle.height / 2,
+          particle.width,
+          particle.height
+        );
+        context.restore();
+      });
+
+      context.globalAlpha = 1;
+
+      if (elapsed < animationDuration) {
+        requestAnimationFrame(runConfettiFrame);
+        return;
+      }
+
+      finishConfetti();
+    }
+
+    requestAnimationFrame(runConfettiFrame);
+  });
 }
 
 function showWelcomeToast() {
@@ -1476,18 +1503,22 @@ function showWelcomeToast() {
   removalTimer = window.setTimeout(removeToast, 5200);
 }
 
-function playWelcomeCelebration() {
+async function playWelcomeCelebration() {
   if (hasPlayedWelcomeCelebration || gridPage.hidden) return;
 
   hasPlayedWelcomeCelebration = true;
+  await waitForAnimationSequence(introToConfettiDelay);
+
+  if (gridPage.hidden) return;
 
   if (!reducedMotionPreference.matches) {
-    burstWelcomeConfetti();
+    await burstWelcomeConfetti();
+    await waitForAnimationSequence(confettiToToastDelay);
   }
 
-  window.setTimeout(showWelcomeToast, reducedMotionPreference.matches ? 0 : 650);
+  if (!gridPage.hidden) {
+    showWelcomeToast();
+  }
 }
 
-window.addEventListener('load', () => {
-  window.setTimeout(playWelcomeCelebration, 2000);
-});
+initialIntroAnimationComplete.then(playWelcomeCelebration);

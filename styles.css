@@ -21,6 +21,12 @@
   --glass-edge: rgba(255, 255, 255, 0.28);
   --glass-depth: rgba(3, 8, 16, 0.2);
   --glass-shadow: rgba(0, 0, 0, 0.34);
+  --intro-background-image: url("assets/images/introImages/introimageDark.png");
+  --intro-text: #f3f3f1;
+  --intro-text-muted: rgba(243, 243, 241, 0.76);
+  --intro-text-strong: #ffffff;
+  --intro-card-edge: rgba(255, 255, 255, 0.14);
+  --intro-card-shadow: rgba(0, 0, 0, 0.38);
   --site-background-color: #050505;
   --site-background:
     repeating-linear-gradient(96deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 4px),
@@ -56,6 +62,12 @@ html.is-light-theme {
   --glass-edge: rgba(255, 255, 255, 0.8);
   --glass-depth: rgba(67, 94, 116, 0.1);
   --glass-shadow: rgba(37, 56, 72, 0.2);
+  --intro-background-image: url("assets/images/introImages/introimageLight.png");
+  --intro-text: #202936;
+  --intro-text-muted: rgba(32, 41, 54, 0.76);
+  --intro-text-strong: #111820;
+  --intro-card-edge: rgba(32, 41, 54, 0.16);
+  --intro-card-shadow: rgba(62, 81, 104, 0.2);
   --site-background-color: #f5f7ff;
   --site-background:
     repeating-linear-gradient(96deg, rgba(40, 76, 122, 0.022) 0 1px, transparent 1px 4px),
@@ -1035,7 +1047,7 @@ body.is-card-transitioning .detail-page {
   padding: 0;
   overflow: hidden;
   background: var(--glass-card);
-  color: #f3f3f1;
+  color: var(--intro-text);
   cursor: default;
 }
 
@@ -1043,23 +1055,12 @@ body.is-card-transitioning .detail-page {
   position: absolute;
   z-index: 0;
   inset: 0;
-  background: url("assets/images/introImages/introimage.png") center / cover no-repeat;
+  background: var(--intro-background-image) center / cover no-repeat;
   content: "";
 }
 
 .intro-card:hover {
   background: var(--glass-card);
-}
-
-.intro-card::after {
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  background:
-    linear-gradient(110deg, rgba(3, 9, 18, 0.36) 0 42%, transparent 70%),
-    radial-gradient(ellipse at center, transparent 35%, rgba(2, 8, 22, 0.14) 100%);
-  content: "";
-  pointer-events: none;
 }
 
 .intro-card__particles {
@@ -1099,13 +1100,13 @@ body.is-card-transitioning .detail-page {
 .intro-card__lead {
   max-width: 470px;
   margin-top: 28px !important;
-  color: rgba(243, 243, 241, 0.76);
+  color: var(--intro-text-muted);
   font-size: 19px;
   line-height: 1.5;
 }
 
 .intro-card__lead strong {
-  color: #ffffff;
+  color: var(--intro-text-strong);
   font-weight: 650;
 }
 
@@ -1132,16 +1133,16 @@ body.is-card-transitioning .detail-page {
   min-height: 171px;
   padding: 4px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--intro-card-edge);
   border-radius: var(--corner-radius);
   background: transparent;
-  box-shadow: 0 2px 1px rgba(0, 0, 0, 0.38);
-  color: #f3f3f1;
+  box-shadow: 0 2px 1px var(--intro-card-shadow);
+  color: var(--intro-text);
   backdrop-filter: none;
 }
 
 .intro-card__highlights strong {
-  color: #ffffff;
+  color: var(--intro-text-strong);
   font-weight: 700;
 }
 

@@ -2,6 +2,7 @@
 
 const pageRoot = document.documentElement;
 const gridPage = document.querySelector('.page-shell');
+const siteHeader = document.querySelector('.site-header');
 const detailPage = document.querySelector('.detail-page');
 const detailContent = document.querySelector('.detail-content');
 const detailBackButton = document.querySelector('.detail-back-button');
@@ -190,6 +191,8 @@ let isAlternateThemeActive = false;
 let horizontalScrollTarget = 0;
 let scrollAnimationFrameId = null;
 let scrollSnapTimerId = null;
+let navigationSyncAnimationFrameId = null;
+let activeGridIndex = -1;
 let isCardTransitionActive = false;
 
 const PROJECT_TRANSITION_TIMING = Object.freeze({
@@ -569,7 +572,17 @@ function renderProjectGallery(project) {
   return `
     <section class="case-study__section" aria-labelledby="project-gallery-title">
       <span class="case-study__eyebrow">Pitch deck</span>
-      <h2 id="project-gallery-title">The problem.</h2>
+      <div class="case-study__gallery-heading">
+        <h2 id="project-gallery-title">The problem.</h2>
+        <div class="case-study__gallery-controls" aria-label="Image gallery controls">
+          <button class="case-study__gallery-button" type="button" data-gallery-direction="previous" aria-label="Previous image">
+            <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+          </button>
+          <button class="case-study__gallery-button" type="button" data-gallery-direction="next" aria-label="Next image">
+            <span class="material-symbols-rounded" aria-hidden="true">arrow_forward</span>
+          </button>
+        </div>
+      </div>
       <div class="case-study__gallery" tabindex="0" aria-label="Double AI product direction; scroll horizontally to view all frames">
         ${project.gallery.map(({ src, alt }) => `
           <figure class="case-study__gallery-frame">
@@ -579,6 +592,54 @@ function renderProjectGallery(project) {
       </div>
     </section>
   `;
+}
+
+function initializeProjectGalleryControls() {
+  const gallery = detailContent.querySelector('.case-study__gallery');
+  const previousButton = detailContent.querySelector('[data-gallery-direction="previous"]');
+  const nextButton = detailContent.querySelector('[data-gallery-direction="next"]');
+
+  if (!gallery || !previousButton || !nextButton) return;
+
+  const frames = [...gallery.querySelectorAll('.case-study__gallery-frame')];
+
+  function getFramePositions() {
+    return frames.map((frame) => frame.offsetLeft - gallery.offsetLeft);
+  }
+
+  function getCurrentFrameIndex(framePositions) {
+    return framePositions.reduce((nearestIndex, framePosition, frameIndex) => {
+      const nearestDistance = Math.abs(framePositions[nearestIndex] - gallery.scrollLeft);
+      const frameDistance = Math.abs(framePosition - gallery.scrollLeft);
+
+      return frameDistance < nearestDistance ? frameIndex : nearestIndex;
+    }, 0);
+  }
+
+  function updateGalleryButtons() {
+    const maximumScrollPosition = gallery.scrollWidth - gallery.clientWidth;
+    previousButton.disabled = gallery.scrollLeft <= 1;
+    nextButton.disabled = gallery.scrollLeft >= maximumScrollPosition - 1;
+  }
+
+  function moveGallery(direction) {
+    const framePositions = getFramePositions();
+    const currentIndex = getCurrentFrameIndex(framePositions);
+    const nextIndex = clamp(currentIndex + direction, 0, framePositions.length - 1);
+
+    gallery.scrollTo({
+      left: framePositions[nextIndex],
+      behavior: reducedMotionPreference.matches ? 'auto' : 'smooth'
+    });
+  }
+
+  previousButton.addEventListener('click', () => moveGallery(-1));
+  nextButton.addEventListener('click', () => moveGallery(1));
+  gallery.addEventListener('scroll', updateGalleryButtons, { passive: true });
+
+  // The detail view is still hidden while its markup is populated. Measure on
+  // the next frame, after the gallery has its real width and scroll range.
+  requestAnimationFrame(updateGalleryButtons);
 }
 
 function renderProjectVideo(project) {
@@ -614,7 +675,6 @@ function renderCaseStudy(project) {
   const externalAction = project.liveUrl ? `
     <a class="case-study__action" href="${escapeHtml(project.liveUrl)}" target="_blank" rel="noopener noreferrer">
       <span>${escapeHtml(project.linkText || 'View live product')}</span>
-      <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
     </a>
   ` : '';
 
@@ -685,6 +745,8 @@ function populateCardDetail(projectId, projectTitle) {
   detailContent.innerHTML = project
     ? renderCaseStudy(project)
     : '<div class="case-study__missing"><h1>Project details coming soon.</h1></div>';
+
+  initializeProjectGalleryControls();
 
   return project;
 }
@@ -945,10 +1007,17 @@ function setBallControlMode(mode) {
 
 function dropBalls(onComplete) {
   const layer = document.createElement('div');
-  const ballCount = reducedMotionPreference.matches ? 6 : 18;
+  const prefersReducedMotion = reducedMotionPreference.matches;
+  const ballCount = prefersReducedMotion ? 10 : 30;
   const ballSize = 34;
   const balls = [];
   const ballColor = isAlternateThemeActive ? '#111111' : '#ffffff';
+  const burstColors = isAlternateThemeActive
+    ? ['#111111', '#ff477e', '#ffb703', '#1677ff', '#00a878']
+    : ['#ffffff', '#ff5c8a', '#ffd84d', '#7aa7ff', '#6df0c2'];
+  const burstStartsAt = prefersReducedMotion ? 1500 : 4050;
+  const burstStagger = prefersReducedMotion ? 160 : 480;
+  const animationEndsAt = prefersReducedMotion ? 1900 : 5300;
   const startedAt = performance.now();
   let previousFrame = startedAt;
 
@@ -974,8 +1043,42 @@ function dropBalls(onComplete) {
       velocityY: 40 + Math.random() * 120,
       rotation: Math.random() * 180,
       rotationSpeed: (Math.random() - 0.5) * 240,
-      bounce: 0.56 + Math.random() * 0.16
+      bounce: 0.56 + Math.random() * 0.16,
+      explodeAt: burstStartsAt + Math.random() * burstStagger,
+      exploded: false
     });
+  }
+
+  function explodeBall(ball) {
+    const burst = document.createElement('span');
+    const ring = document.createElement('span');
+    const particleCount = prefersReducedMotion ? 5 : 9;
+
+    burst.className = 'ball-burst';
+    burst.style.transform = `translate3d(${ball.x + ball.size / 2}px, ${ball.y + ball.size / 2}px, 0)`;
+    burst.style.setProperty('--burst-color', ballColor);
+    ring.className = 'ball-burst__ring';
+    burst.append(ring);
+
+    for (let index = 0; index < particleCount; index += 1) {
+      const particle = document.createElement('span');
+      const angle = (360 / particleCount) * index + (Math.random() - 0.5) * 22;
+
+      particle.className = 'ball-burst__particle';
+      particle.style.setProperty('--particle-angle', `${angle}deg`);
+      particle.style.setProperty('--particle-distance', `${30 + Math.random() * 30}px`);
+      particle.style.setProperty('--particle-spin', `${120 + Math.random() * 300}deg`);
+      particle.style.setProperty(
+        '--particle-color',
+        burstColors[(index + Math.floor(Math.random() * burstColors.length)) % burstColors.length]
+      );
+      burst.append(particle);
+    }
+
+    ball.exploded = true;
+    ball.element.remove();
+    layer.append(burst);
+    window.setTimeout(() => burst.remove(), 700);
   }
 
   function getVisibleCardBounds() {
@@ -1046,6 +1149,8 @@ function dropBalls(onComplete) {
     }
 
     balls.forEach((ball) => {
+      if (ball.exploded) return;
+
       const previousX = ball.x;
       const previousY = ball.y;
 
@@ -1071,10 +1176,13 @@ function dropBalls(onComplete) {
       }
 
       ball.element.style.transform = `translate3d(${ball.x}px, ${ball.y}px, 0) rotate(${ball.rotation}deg)`;
-      ball.element.style.opacity = elapsed > 4300 ? String(Math.max(0, 1 - (elapsed - 4300) / 700)) : '1';
+
+      if (elapsed >= ball.explodeAt) {
+        explodeBall(ball);
+      }
     });
 
-    if (elapsed < 5000) {
+    if (elapsed < animationEndsAt) {
       requestAnimationFrame(animateBalls);
     } else {
       layer.remove();
@@ -1221,6 +1329,85 @@ function centerGrid(gridIndex, isPreview = true) {
 
   startScrollAnimation();
 }
+
+/* Keep the navigation marker in sync with the section currently in view. */
+function setActiveGrid(gridIndex) {
+  if (gridIndex === activeGridIndex) return;
+
+  activeGridIndex = gridIndex;
+
+  navigationTargets.forEach((target, targetIndex) => {
+    const isActive = targetIndex === gridIndex;
+    target.classList.toggle('is-active', isActive);
+
+    if (isActive) {
+      target.setAttribute('aria-current', 'true');
+    } else {
+      target.removeAttribute('aria-current');
+    }
+  });
+}
+
+function getActiveGridIndex() {
+  if (mobileLayoutPreference.matches) {
+    const headerBottom = siteHeader.getBoundingClientRect().bottom;
+    let currentIndex = 0;
+    let largestVisibleArea = -1;
+
+    cardGrids.forEach((grid, gridIndex) => {
+      const gridBounds = grid.getBoundingClientRect();
+      const visibleTop = Math.max(gridBounds.top, headerBottom);
+      const visibleBottom = Math.min(gridBounds.bottom, window.innerHeight);
+      const visibleArea = Math.max(0, visibleBottom - visibleTop);
+
+      if (visibleArea > largestVisibleArea) {
+        largestVisibleArea = visibleArea;
+        currentIndex = gridIndex;
+      }
+    });
+
+    return currentIndex;
+  }
+
+  const collectionStyles = getComputedStyle(cardCollection);
+  const collectionLeftPadding = parseFloat(collectionStyles.paddingLeft);
+  const maximumScrollPosition = getMaximumScrollPosition();
+  let nearestIndex = 0;
+  let nearestDistance = Infinity;
+
+  cardGrids.forEach((grid, gridIndex) => {
+    const alignedPosition = clamp(
+      grid.offsetLeft - collectionLeftPadding,
+      0,
+      maximumScrollPosition
+    );
+    const distance = Math.abs(alignedPosition - cardCollection.scrollLeft);
+
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearestIndex = gridIndex;
+    }
+  });
+
+  return nearestIndex;
+}
+
+function syncNavigationToScroll() {
+  navigationSyncAnimationFrameId = null;
+  setActiveGrid(getActiveGridIndex());
+}
+
+function scheduleNavigationSync() {
+  if (navigationSyncAnimationFrameId !== null) return;
+
+  navigationSyncAnimationFrameId = requestAnimationFrame(syncNavigationToScroll);
+}
+
+cardCollection.addEventListener('scroll', scheduleNavigationSync, { passive: true });
+window.addEventListener('scroll', scheduleNavigationSync, { passive: true });
+window.addEventListener('resize', scheduleNavigationSync);
+mobileLayoutPreference.addEventListener('change', scheduleNavigationSync);
+syncNavigationToScroll();
 
 /* Hovering over the navigation markers previews each grid in the center. */
 navigationTargets.forEach((target) => {
@@ -1521,7 +1708,7 @@ function showWelcomeToast() {
   closeButton.className = 'welcome-toast__close';
   closeButton.type = 'button';
   closeButton.setAttribute('aria-label', 'Dismiss welcome message');
-  closeIcon.className = 'material-symbols-outlined';
+  closeIcon.className = 'material-symbols-rounded';
   closeIcon.setAttribute('aria-hidden', 'true');
   closeIcon.textContent = 'close';
   closeButton.append(closeIcon);

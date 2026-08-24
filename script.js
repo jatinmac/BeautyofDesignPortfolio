@@ -2005,13 +2005,23 @@ function burstWelcomeConfetti() {
   const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
-  const confettiColor = pageRoot.classList.contains('is-light-theme') ? '#000000' : '#ffffff';
+  const confettiGradients = [
+    ['#ff4f9a', '#ff7a45', '#ffd84d'],
+    ['#ff5edb', '#a86cff', '#625dff'],
+    ['#7c5cff', '#3f8cff', '#42e8ff'],
+    ['#16d9c5', '#58efa1', '#d5f75f'],
+    ['#ffe45e', '#ff9f43', '#ff5364']
+  ];
+  const confettiShapes = ['ribbon', 'ribbon', 'ribbon', 'diamond', 'circle'];
   const particleCount = mobileLayoutPreference.matches ? 320 : 700;
   const pulseCount = 5;
   const particlesPerPulse = particleCount / pulseCount;
   const particles = Array.from({ length: particleCount }, (_, index) => {
     const launchesFromLeft = index % 2 === 0;
     const pulseIndex = Math.floor(index / particlesPerPulse);
+    const gradient = confettiGradients[
+      (index + Math.floor(Math.random() * confettiGradients.length)) % confettiGradients.length
+    ];
 
     return {
       x: launchesFromLeft ? -12 : viewportWidth + 12,
@@ -2023,7 +2033,13 @@ function burstWelcomeConfetti() {
       height: 3 + Math.random() * 5,
       rotation: Math.random() * Math.PI * 2,
       rotationSpeed: (Math.random() - 0.5) * 0.38,
-      color: confettiColor
+      flip: Math.random() * Math.PI,
+      flipSpeed: 0.08 + Math.random() * 0.16,
+      drift: Math.random() * Math.PI * 2,
+      driftSpeed: 0.035 + Math.random() * 0.035,
+      opacity: 0.78 + Math.random() * 0.22,
+      shape: confettiShapes[Math.floor(Math.random() * confettiShapes.length)],
+      gradient: Math.random() > 0.5 ? gradient : [...gradient].reverse()
     };
   });
   const animationDuration = 2800;
@@ -2053,27 +2069,60 @@ function burstWelcomeConfetti() {
 
       previousFrame = now;
       context.clearRect(0, 0, viewportWidth, viewportHeight);
-      context.globalAlpha = opacity;
 
       particles.forEach((particle) => {
         if (elapsed < particle.launchDelay) return;
 
         particle.velocityX *= 0.992 ** frameScale;
         particle.velocityY += 0.19 * frameScale;
-        particle.x += particle.velocityX * frameScale;
+        particle.drift += particle.driftSpeed * frameScale;
+        particle.x += (particle.velocityX + Math.sin(particle.drift) * 0.32) * frameScale;
         particle.y += particle.velocityY * frameScale;
         particle.rotation += particle.rotationSpeed * frameScale;
+        particle.flip += particle.flipSpeed * frameScale;
 
         context.save();
         context.translate(particle.x, particle.y);
         context.rotate(particle.rotation);
-        context.fillStyle = particle.color;
-        context.fillRect(
+        context.scale(1, Math.max(0.16, Math.abs(Math.cos(particle.flip))));
+        context.globalAlpha = opacity * particle.opacity;
+
+        const particleGradient = context.createLinearGradient(
           -particle.width / 2,
           -particle.height / 2,
-          particle.width,
-          particle.height
+          particle.width / 2,
+          particle.height / 2
         );
+        particleGradient.addColorStop(0, particle.gradient[0]);
+        particleGradient.addColorStop(0.52, particle.gradient[1]);
+        particleGradient.addColorStop(1, particle.gradient[2]);
+        context.fillStyle = particleGradient;
+
+        if (particle.shape === 'circle') {
+          const radius = particle.width * 0.45;
+          context.beginPath();
+          context.arc(0, 0, radius, 0, Math.PI * 2);
+          context.fill();
+        } else if (particle.shape === 'diamond') {
+          context.beginPath();
+          context.moveTo(0, -particle.width * 0.58);
+          context.lineTo(particle.width * 0.5, 0);
+          context.lineTo(0, particle.width * 0.58);
+          context.lineTo(-particle.width * 0.5, 0);
+          context.closePath();
+          context.fill();
+        } else {
+          const halfWidth = particle.width / 2;
+          const halfHeight = particle.height / 2;
+          context.beginPath();
+          context.moveTo(-halfWidth, -halfHeight);
+          context.quadraticCurveTo(0, -halfHeight * 1.5, halfWidth, -halfHeight);
+          context.lineTo(halfWidth, halfHeight);
+          context.quadraticCurveTo(0, halfHeight * 0.5, -halfWidth, halfHeight);
+          context.closePath();
+          context.fill();
+        }
+
         context.restore();
       });
 

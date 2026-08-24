@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="is-light-theme">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#020713" />
+    <meta name="theme-color" content="#edf6fb" />
     <title>Jatin Davis</title>
     <link rel="icon" type="image/svg+xml" href="assets/images/logo.svg" />
 
@@ -22,6 +22,8 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <canvas class="site-shader" aria-hidden="true"></canvas>
+
     <main class="page-shell">
       <!-- Top navigation controls -->
       <header class="site-header">
@@ -105,10 +107,10 @@
           </button>
 
           <button
-            class="theme-control"
+            class="theme-control is-light-theme"
             type="button"
-            aria-label="Switch to light mode"
-            aria-pressed="false"
+            aria-label="Switch to dark mode"
+            aria-pressed="true"
           >
             <span
               class="material-symbols-rounded theme-icon theme-icon--light"

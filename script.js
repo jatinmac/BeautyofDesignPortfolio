@@ -1,6 +1,7 @@
 /* ---------- Elements ---------- */
 
 const pageRoot = document.documentElement;
+const siteShaderCanvas = document.querySelector('.site-shader');
 const gridPage = document.querySelector('.page-shell');
 const siteHeader = document.querySelector('.site-header');
 const detailPage = document.querySelector('.detail-page');
@@ -34,6 +35,281 @@ if (!reducedMotionPreference.matches) {
   introTitle.style.opacity = '0';
 }
 
+/* ---------- Living site background ---------- */
+
+function initializeSiteShader() {
+  const gl = siteShaderCanvas.getContext('webgl', {
+    alpha: false,
+    antialias: false,
+    depth: false,
+    powerPreference: 'low-power'
+  });
+
+  if (!gl) {
+    siteShaderCanvas.hidden = true;
+    return;
+  }
+
+  const vertexShaderSource = `
+    attribute vec2 a_position;
+
+    void main() {
+      gl_Position = vec4(a_position, 0.0, 1.0);
+    }
+  `;
+
+  const fragmentShaderSource = `
+    precision mediump float;
+
+    uniform vec2 u_resolution;
+    uniform vec2 u_pointer;
+    uniform vec2 u_scroll;
+    uniform float u_time;
+    uniform float u_light;
+
+    float hash(vec2 point) {
+      return fract(sin(dot(point, vec2(127.1, 311.7))) * 43758.5453123);
+    }
+
+    float noise(vec2 point) {
+      vec2 cell = floor(point);
+      vec2 local = fract(point);
+      local = local * local * (3.0 - 2.0 * local);
+
+      return mix(
+        mix(hash(cell), hash(cell + vec2(1.0, 0.0)), local.x),
+        mix(hash(cell + vec2(0.0, 1.0)), hash(cell + vec2(1.0)), local.x),
+        local.y
+      );
+    }
+
+    float fbm(vec2 point) {
+      float value = 0.0;
+      float amplitude = 0.5;
+
+      for (int octave = 0; octave < 4; octave++) {
+        value += noise(point) * amplitude;
+        point = mat2(1.62, 1.18, -1.18, 1.62) * point + 0.37;
+        amplitude *= 0.5;
+      }
+
+      return value;
+    }
+
+    float glowBlob(vec2 point, vec2 center, vec2 scale) {
+      vec2 delta = (point - center) / scale;
+      return exp(-dot(delta, delta) * 1.65);
+    }
+
+    void main() {
+      vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+      float time = u_time;
+      float scrollPhase = u_scroll.x * 0.36 + u_scroll.y * 0.48;
+      vec2 pointerOffset = (u_pointer - 0.5) * vec2(0.035, 0.025);
+      vec2 scrollOffset = vec2(
+        sin(scrollPhase * 0.55) * 0.055 + u_scroll.x * 0.006,
+        cos(scrollPhase * 0.42) * 0.035 - u_scroll.y * 0.006
+      );
+
+      vec2 flowSample = uv * 1.15;
+      vec2 flow = vec2(
+        fbm(flowSample + vec2(time * 0.024, -time * 0.018 + scrollPhase * 0.22)),
+        fbm(flowSample + vec2(4.7 - time * 0.019, 2.1 + time * 0.022 - scrollPhase * 0.2))
+      ) - 0.5;
+      vec2 warped = uv + flow * 0.042 + pointerOffset + scrollOffset;
+
+      vec2 redCenter = vec2(
+        0.91 + sin(time * 0.072 + scrollPhase) * 0.045,
+        0.91 + cos(time * 0.058 - scrollPhase) * 0.038
+      );
+      vec2 blueCenter = vec2(
+        0.31 + cos(time * 0.052 - scrollPhase * 0.7) * 0.055,
+        0.12 + sin(time * 0.069 + scrollPhase) * 0.042
+      );
+      vec2 deepBlueCenter = vec2(
+        0.69 + sin(time * 0.061 + 1.4 + scrollPhase) * 0.052,
+        0.18 + cos(time * 0.047 + scrollPhase * 0.8) * 0.044
+      );
+
+      float redHalo = glowBlob(warped, redCenter, vec2(0.42, 0.34));
+      float redCore = glowBlob(warped, redCenter, vec2(0.27, 0.23));
+      float blueHalo = glowBlob(warped, blueCenter, vec2(0.47, 0.39));
+      float blueCore = glowBlob(warped, blueCenter, vec2(0.31, 0.31));
+      float deepBlue = glowBlob(warped, deepBlueCenter, vec2(0.43, 0.32));
+
+      vec3 darkColor = vec3(0.008, 0.014, 0.026);
+      darkColor = mix(darkColor, vec3(0.18, 0.035, 0.045), redHalo * 0.56);
+      darkColor = mix(darkColor, vec3(0.91, 0.12, 0.10), redCore * 0.76);
+      darkColor = mix(darkColor, vec3(0.00, 0.24, 0.54), blueHalo * 0.58);
+      darkColor = mix(darkColor, vec3(0.00, 0.49, 0.92), blueCore * 0.80);
+      darkColor = mix(darkColor, vec3(0.15, 0.22, 0.78), deepBlue * 0.67);
+
+      vec3 lightColor = vec3(0.955, 0.962, 0.975);
+      lightColor = mix(lightColor, vec3(1.0, 0.77, 0.68), redHalo * 0.47);
+      lightColor = mix(lightColor, vec3(1.0, 0.22, 0.15), redCore * 0.73);
+      lightColor = mix(lightColor, vec3(0.55, 0.82, 0.98), blueHalo * 0.43);
+      lightColor = mix(lightColor, vec3(0.00, 0.48, 0.95), blueCore * 0.78);
+      lightColor = mix(lightColor, vec3(0.24, 0.24, 0.92), deepBlue * 0.61);
+
+      vec3 color = mix(darkColor, lightColor, u_light);
+
+      float dither = hash(gl_FragCoord.xy) - 0.5;
+      color += dither * mix(0.0035, 0.002, u_light);
+
+      gl_FragColor = vec4(color, 1.0);
+    }
+  `;
+
+  function compileShader(type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.warn('The background shader could not compile.', gl.getShaderInfoLog(shader));
+      gl.deleteShader(shader);
+      return null;
+    }
+
+    return shader;
+  }
+
+  const vertexShader = compileShader(gl.VERTEX_SHADER, vertexShaderSource);
+  const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+  if (!vertexShader || !fragmentShader) {
+    siteShaderCanvas.hidden = true;
+    return;
+  }
+
+  const program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.warn('The background shader could not link.', gl.getProgramInfoLog(program));
+    siteShaderCanvas.hidden = true;
+    return;
+  }
+
+  const positionBuffer = gl.createBuffer();
+  const positionLocation = gl.getAttribLocation(program, 'a_position');
+  const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
+  const pointerLocation = gl.getUniformLocation(program, 'u_pointer');
+  const scrollLocation = gl.getUniformLocation(program, 'u_scroll');
+  const timeLocation = gl.getUniformLocation(program, 'u_time');
+  const lightLocation = gl.getUniformLocation(program, 'u_light');
+  const pointerTarget = { x: 0.5, y: 0.5 };
+  const pointerCurrent = { x: 0.5, y: 0.5 };
+  const scrollTarget = { x: 0, y: 0 };
+  const scrollCurrent = { x: 0, y: 0 };
+  let lightAmount = pageRoot.classList.contains('is-light-theme') ? 1 : 0;
+  let animationFrameId = null;
+  let startedAt = performance.now();
+  let previousFrameAt = startedAt;
+
+  gl.useProgram(program);
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+    gl.STATIC_DRAW
+  );
+  gl.enableVertexAttribArray(positionLocation);
+  gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+  function resizeShader() {
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+    const width = Math.round(window.innerWidth * pixelRatio);
+    const height = Math.round(window.innerHeight * pixelRatio);
+
+    if (siteShaderCanvas.width !== width || siteShaderCanvas.height !== height) {
+      siteShaderCanvas.width = width;
+      siteShaderCanvas.height = height;
+      gl.viewport(0, 0, width, height);
+    }
+  }
+
+  function renderShader(now = performance.now()) {
+    resizeShader();
+
+    const targetLightAmount = pageRoot.classList.contains('is-light-theme') ? 1 : 0;
+    const frameDelta = Math.min((now - previousFrameAt) / 1000, 0.05);
+    const themeEasing = reducedMotionPreference.matches ? 1 : 1 - Math.exp(-frameDelta * 3.5);
+    const pointerEasing = reducedMotionPreference.matches ? 1 : 1 - Math.exp(-frameDelta * 4.5);
+    const scrollEasing = reducedMotionPreference.matches ? 1 : 1 - Math.exp(-frameDelta * 7.5);
+
+    previousFrameAt = now;
+    lightAmount += (targetLightAmount - lightAmount) * themeEasing;
+    pointerCurrent.x += (pointerTarget.x - pointerCurrent.x) * pointerEasing;
+    pointerCurrent.y += (pointerTarget.y - pointerCurrent.y) * pointerEasing;
+    scrollCurrent.x += (scrollTarget.x - scrollCurrent.x) * scrollEasing;
+    scrollCurrent.y += (scrollTarget.y - scrollCurrent.y) * scrollEasing;
+
+    gl.uniform2f(resolutionLocation, siteShaderCanvas.width, siteShaderCanvas.height);
+    gl.uniform2f(pointerLocation, pointerCurrent.x, pointerCurrent.y);
+    gl.uniform2f(scrollLocation, scrollCurrent.x, scrollCurrent.y);
+    gl.uniform1f(timeLocation, reducedMotionPreference.matches ? 0 : (now - startedAt) / 1000);
+    gl.uniform1f(lightLocation, lightAmount);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+    if (!reducedMotionPreference.matches && !document.hidden) {
+      animationFrameId = requestAnimationFrame(renderShader);
+    } else {
+      animationFrameId = null;
+    }
+  }
+
+  function handlePointerMove(event) {
+    pointerTarget.x = event.clientX / window.innerWidth;
+    pointerTarget.y = 1 - event.clientY / window.innerHeight;
+  }
+
+  function handleScroll() {
+    const maximumHorizontalScroll = Math.max(
+      cardCollection.scrollWidth - cardCollection.clientWidth,
+      1
+    );
+    const maximumVerticalScroll = Math.max(
+      document.documentElement.scrollHeight - window.innerHeight,
+      1
+    );
+
+    // Multiplying normalized progress gives the shader enough travel to remain
+    // visibly connected to long horizontal and vertical page journeys.
+    scrollTarget.x = (cardCollection.scrollLeft / maximumHorizontalScroll) * 3.2;
+    scrollTarget.y = (window.scrollY / maximumVerticalScroll) * 3.2;
+
+    if (reducedMotionPreference.matches) renderShader();
+  }
+
+  function restartShader() {
+    if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
+    startedAt = performance.now();
+    previousFrameAt = startedAt;
+    handleScroll();
+    animationFrameId = requestAnimationFrame(renderShader);
+  }
+
+  window.addEventListener('pointermove', handlePointerMove, { passive: true });
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  cardCollection.addEventListener('scroll', handleScroll, { passive: true });
+  window.addEventListener('resize', restartShader, { passive: true });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) restartShader();
+  });
+  reducedMotionPreference.addEventListener('change', restartShader);
+  new MutationObserver(() => {
+    if (reducedMotionPreference.matches) renderShader();
+  }).observe(pageRoot, { attributes: true, attributeFilter: ['class'] });
+
+  handleScroll();
+  renderShader();
+}
+
+initializeSiteShader();
+
 /* ---------- Project case-study content ---------- */
 
 const PROJECT_CASE_STUDIES = [
@@ -52,7 +328,7 @@ const PROJECT_CASE_STUDIES = [
     context: {
       Company: 'Double AI (Early-Stage AI Startup)',
       Role: 'Sole Product Designer',
-      Timeline: '2026 · 5+ major releases shipped in 3 months',
+      Timeline: '2025 December - present',
       Team: 'Founders and engineering',
       Tools: 'Figma, AI for research and flow design, AI coding agents',
       Constraints: 'The product had to move quickly while voice cloning, text-to-speech quality, open-source model performance, and GPU infrastructure were still evolving.'
@@ -187,7 +463,7 @@ const PROJECTS_BY_ID = new Map(PROJECT_CASE_STUDIES.map((project) => [project.id
 
 /* ---------- Interaction state ---------- */
 
-let isAlternateThemeActive = false;
+let isAlternateThemeActive = true;
 let horizontalScrollTarget = 0;
 let scrollAnimationFrameId = null;
 let scrollSnapTimerId = null;
@@ -196,9 +472,9 @@ let activeGridIndex = -1;
 let isCardTransitionActive = false;
 
 const PROJECT_TRANSITION_TIMING = Object.freeze({
-  lift: 150,
-  morph: 760,
-  fallbackReveal: 320
+  lift: 170,
+  morph: 880,
+  contentReveal: 620
 });
 
 /* ---------- Intro particle-to-type motion ---------- */
@@ -778,44 +1054,45 @@ function showGridPage() {
   window.scrollTo({ top: 0, behavior: 'auto' });
 }
 
-function createCardTransitionTarget() {
-  const detailBounds = detailContent.getBoundingClientRect();
-  const detailRadius = Number.parseFloat(getComputedStyle(detailContent).borderTopLeftRadius) || 8;
-  const target = document.createElement('div');
-
-  target.className = 'card-transition-target';
-  target.setAttribute('aria-hidden', 'true');
-  target.style.viewTransitionName = 'project-surface';
-  Object.assign(target.style, {
-    top: `${detailBounds.top}px`,
-    left: `${detailBounds.left}px`,
-    width: `${detailBounds.width}px`,
-    height: `${Math.max(
-      1,
-      window.innerHeight - detailBounds.top + (mobileLayoutPreference.matches ? 20 : 32)
-    )}px`,
-    borderRadius: `${detailRadius}px`
+function applyFixedBounds(element, bounds) {
+  Object.assign(element.style, {
+    top: `${bounds.top}px`,
+    left: `${bounds.left}px`,
+    width: `${bounds.width}px`,
+    height: `${bounds.height}px`
   });
-
-  document.body.append(target);
-  return target;
 }
 
-async function revealProjectWithoutViewTransition(projectId, projectTitle) {
-  populateCardDetail(projectId, projectTitle);
-  commitCardDetail(projectId, projectTitle);
+function createProjectTransitionLayers(card) {
+  const cardBounds = card.getBoundingClientRect();
+  const media = card.querySelector('.project-card__media');
+  const mediaBounds = media?.getBoundingClientRect();
+  const surface = card.cloneNode(true);
+  let mediaLayer = null;
 
-  const revealAnimation = detailPage.animate([
-    { opacity: 0, transform: 'translate3d(0, 8px, 0) scale(0.996)' },
-    { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' }
-  ], {
-    duration: PROJECT_TRANSITION_TIMING.fallbackReveal,
-    easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-    fill: 'both'
-  });
+  surface.classList.add('project-card-transition-clone');
+  surface.removeAttribute('role');
+  surface.removeAttribute('tabindex');
+  surface.setAttribute('aria-hidden', 'true');
+  surface.querySelector('.project-card__media')?.style.setProperty('opacity', '0');
+  applyFixedBounds(surface, cardBounds);
+  surface.style.transform = 'none';
+  document.body.append(surface);
 
-  await revealAnimation.finished.catch(() => undefined);
-  revealAnimation.cancel();
+  if (media && mediaBounds) {
+    mediaLayer = media.cloneNode(true);
+    mediaLayer.className = 'project-media-transition-clone';
+    mediaLayer.setAttribute('aria-hidden', 'true');
+    applyFixedBounds(mediaLayer, mediaBounds);
+    mediaLayer.style.borderRadius = getComputedStyle(media).borderRadius;
+    document.body.append(mediaLayer);
+  }
+
+  return { surface, mediaLayer, cardBounds, mediaBounds };
+}
+
+function settleAnimation(animation) {
+  return animation?.finished.catch(() => undefined);
 }
 
 async function morphCardIntoDetail(card, projectId, projectTitle) {
@@ -830,57 +1107,176 @@ async function morphCardIntoDetail(card, projectId, projectTitle) {
 
   const cardStyles = getComputedStyle(card);
   const cardRadius = Number.parseFloat(cardStyles.borderTopLeftRadius) || 8;
-  const raisedRadius = Math.max(cardRadius, Math.min(18, cardRadius + 8));
-  const baseTransform = cardStyles.transform === 'none'
-    ? 'translate3d(0, 0, 0)'
-    : cardStyles.transform;
   const previousWillChange = card.style.willChange;
+  const previousVisibility = card.style.visibility;
+  let transitionLayers;
   let liftAnimation;
-  let transitionTarget;
+  let mediaLiftAnimation;
+  let gridExitAnimation;
+  let surfaceMorphAnimation;
+  let mediaMorphAnimation;
+  let detailRevealAnimation;
   let hasCommittedDetail = false;
 
-  pageRoot.style.setProperty('--project-transition-raised-radius', `${raisedRadius}px`);
-  pageRoot.style.setProperty('--project-transition-duration', `${PROJECT_TRANSITION_TIMING.morph}ms`);
-  pageRoot.classList.add('is-project-view-transition');
   document.body.classList.add('is-card-transitioning');
-  card.style.willChange = 'transform, border-radius, box-shadow';
+  card.style.willChange = 'transform, opacity';
 
   try {
-    liftAnimation = card.animate([
-      {
-        borderRadius: `${cardRadius}px`,
-        boxShadow: cardStyles.boxShadow,
-        transform: baseTransform
-      },
-      {
-        borderRadius: `${raisedRadius}px`,
-        boxShadow: 'inset 0 -1px 0 rgba(0, 0, 0, 0.12), 0 24px 54px rgba(0, 0, 0, 0.3)',
-        transform: `${baseTransform} translate3d(0, -11px, 0) scale(1.018)`
-      }
+    transitionLayers = createProjectTransitionLayers(card);
+    const { surface, mediaLayer } = transitionLayers;
+    card.style.visibility = 'hidden';
+
+    liftAnimation = surface.animate([
+      { transform: 'translate3d(0, 0, 0) scale(1)', borderRadius: `${cardRadius}px` },
+      { transform: 'translate3d(0, -8px, 0) scale(1.012)', borderRadius: `${cardRadius + 4}px` }
     ], {
       duration: PROJECT_TRANSITION_TIMING.lift,
-      easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
       fill: 'forwards'
     });
 
-    await liftAnimation.finished.catch(() => undefined);
-
-    if (typeof document.startViewTransition !== 'function') {
-      await revealProjectWithoutViewTransition(projectId, projectTitle);
-      hasCommittedDetail = true;
-      return;
+    if (mediaLayer) {
+      mediaLiftAnimation = mediaLayer.animate([
+        { transform: 'translate3d(0, 0, 0) scale(1)' },
+        { transform: 'translate3d(0, -8px, 0) scale(1.012)' }
+      ], {
+        duration: PROJECT_TRANSITION_TIMING.lift,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        fill: 'forwards'
+      });
     }
 
-    card.style.viewTransitionName = 'project-surface';
-
-    const pageTransition = document.startViewTransition(() => {
-      populateCardDetail(projectId, projectTitle);
-      commitCardDetail(projectId, projectTitle);
-      hasCommittedDetail = true;
-      transitionTarget = createCardTransitionTarget();
+    gridExitAnimation = gridPage.animate([
+      { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
+      { opacity: 0, transform: 'translate3d(0, 8px, 0) scale(0.992)' }
+    ], {
+      duration: PROJECT_TRANSITION_TIMING.lift + 90,
+      easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+      fill: 'forwards'
     });
 
-    await pageTransition.finished.catch(() => undefined);
+    await Promise.all([settleAnimation(liftAnimation), settleAnimation(mediaLiftAnimation)]);
+
+    const liftedSurfaceBounds = surface.getBoundingClientRect();
+    const liftedMediaBounds = mediaLayer?.getBoundingClientRect();
+    liftAnimation.cancel();
+    mediaLiftAnimation?.cancel();
+    applyFixedBounds(surface, liftedSurfaceBounds);
+    surface.style.transform = 'none';
+
+    if (mediaLayer && liftedMediaBounds) {
+      applyFixedBounds(mediaLayer, liftedMediaBounds);
+      mediaLayer.style.transform = 'none';
+    }
+
+    detailPage.style.opacity = '0';
+    populateCardDetail(projectId, projectTitle);
+    commitCardDetail(projectId, projectTitle);
+    hasCommittedDetail = true;
+
+    const detailBounds = detailContent.getBoundingClientRect();
+    const detailRadius = Number.parseFloat(getComputedStyle(detailContent).borderTopLeftRadius) || 8;
+    const detailSurfaceHeight = Math.max(
+      1,
+      window.innerHeight - detailBounds.top + (mobileLayoutPreference.matches ? 20 : 32)
+    );
+    const heroMedia = detailContent.querySelector('.case-study__hero-media');
+    const heroMediaBounds = heroMedia?.getBoundingClientRect();
+
+    surfaceMorphAnimation = surface.animate([
+      {
+        top: `${liftedSurfaceBounds.top}px`,
+        left: `${liftedSurfaceBounds.left}px`,
+        width: `${liftedSurfaceBounds.width}px`,
+        height: `${liftedSurfaceBounds.height}px`,
+        borderRadius: `${cardRadius + 4}px`,
+        opacity: 1
+      },
+      {
+        top: `${detailBounds.top}px`,
+        left: `${detailBounds.left}px`,
+        width: `${detailBounds.width}px`,
+        height: `${detailSurfaceHeight}px`,
+        borderRadius: `${detailRadius}px`,
+        opacity: 1,
+        offset: 0.82
+      },
+      {
+        top: `${detailBounds.top}px`,
+        left: `${detailBounds.left}px`,
+        width: `${detailBounds.width}px`,
+        height: `${detailSurfaceHeight}px`,
+        borderRadius: `${detailRadius}px`,
+        opacity: 0
+      }
+    ], {
+      duration: PROJECT_TRANSITION_TIMING.morph,
+      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      fill: 'forwards'
+    });
+
+    const surfaceContent = surface.querySelectorAll('.project-card__title, .project-card__tags');
+    surfaceContent.forEach((element) => {
+      element.animate([
+        { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+        { opacity: 0, transform: 'translate3d(0, 8px, 0)', offset: 0.42 },
+        { opacity: 0, transform: 'translate3d(0, 8px, 0)' }
+      ], {
+        duration: PROJECT_TRANSITION_TIMING.morph,
+        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        fill: 'forwards'
+      });
+    });
+
+    if (mediaLayer && liftedMediaBounds && heroMediaBounds) {
+      mediaMorphAnimation = mediaLayer.animate([
+        {
+          top: `${liftedMediaBounds.top}px`,
+          left: `${liftedMediaBounds.left}px`,
+          width: `${liftedMediaBounds.width}px`,
+          height: `${liftedMediaBounds.height}px`,
+          borderRadius: '4px',
+          opacity: 1
+        },
+        {
+          top: `${heroMediaBounds.top}px`,
+          left: `${heroMediaBounds.left}px`,
+          width: `${heroMediaBounds.width}px`,
+          height: `${heroMediaBounds.height}px`,
+          borderRadius: `${detailRadius}px`,
+          opacity: 1,
+          offset: 0.82
+        },
+        {
+          top: `${heroMediaBounds.top}px`,
+          left: `${heroMediaBounds.left}px`,
+          width: `${heroMediaBounds.width}px`,
+          height: `${heroMediaBounds.height}px`,
+          borderRadius: `${detailRadius}px`,
+          opacity: 0
+        }
+      ], {
+        duration: PROJECT_TRANSITION_TIMING.morph,
+        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        fill: 'forwards'
+      });
+    }
+
+    detailRevealAnimation = detailPage.animate([
+      { opacity: 0, transform: 'translate3d(0, 18px, 0)' },
+      { opacity: 1, transform: 'translate3d(0, 0, 0)' }
+    ], {
+      duration: PROJECT_TRANSITION_TIMING.contentReveal,
+      delay: 170,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      fill: 'both'
+    });
+
+    await Promise.all([
+      settleAnimation(surfaceMorphAnimation),
+      settleAnimation(mediaMorphAnimation),
+      settleAnimation(detailRevealAnimation)
+    ]);
   } finally {
     try {
       if (!hasCommittedDetail) {
@@ -889,16 +1285,21 @@ async function morphCardIntoDetail(card, projectId, projectTitle) {
       }
     } finally {
       liftAnimation?.cancel();
-      transitionTarget?.remove();
-      card.style.removeProperty('view-transition-name');
+      mediaLiftAnimation?.cancel();
+      gridExitAnimation?.cancel();
+      surfaceMorphAnimation?.cancel();
+      mediaMorphAnimation?.cancel();
+      detailRevealAnimation?.cancel();
+      transitionLayers?.surface.remove();
+      transitionLayers?.mediaLayer?.remove();
+      detailPage.style.removeProperty('opacity');
+      detailPage.style.removeProperty('transform');
+      card.style.visibility = previousVisibility;
       if (previousWillChange) {
         card.style.willChange = previousWillChange;
       } else {
         card.style.removeProperty('will-change');
       }
-      pageRoot.style.removeProperty('--project-transition-raised-radius');
-      pageRoot.style.removeProperty('--project-transition-duration');
-      pageRoot.classList.remove('is-project-view-transition');
       document.body.classList.remove('is-card-transitioning');
       isCardTransitionActive = false;
       detailBackButton.focus({ preventScroll: true });

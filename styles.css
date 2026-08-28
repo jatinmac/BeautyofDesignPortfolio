@@ -101,6 +101,11 @@ body {
   transition: background-color 500ms ease;
 }
 
+/* The opaque WebGL canvas replaces this fallback while it is available. */
+html.has-site-shader body {
+  animation: none;
+}
+
 @keyframes site-background-drift {
   0% {
     background-position: 46% 44%;

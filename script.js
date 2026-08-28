@@ -28,10 +28,37 @@ const introTitle = introCard.querySelector('h1');
 const introParticleCanvas = introCard.querySelector('.intro-card__particles');
 const reducedMotionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
 const mobileLayoutPreference = window.matchMedia('(max-width: 760px)');
+const INTRO_ANIMATION_STORAGE_KEY = 'jatin-davis-intro-seen';
 
-introParticleCanvas.hidden = reducedMotionPreference.matches;
+document.querySelectorAll('img').forEach((image) => {
+  image.decoding = 'async';
+});
 
-if (!reducedMotionPreference.matches) {
+function hasSeenIntroAnimation() {
+  try {
+    return window.localStorage.getItem(INTRO_ANIMATION_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function rememberIntroAnimationVisit() {
+  try {
+    window.localStorage.setItem(INTRO_ANIMATION_STORAGE_KEY, 'true');
+  } catch {
+    // The in-memory guard below still prevents replays during this page visit.
+  }
+}
+
+const shouldPlayInitialIntroAnimation = !hasSeenIntroAnimation();
+
+if (shouldPlayInitialIntroAnimation) {
+  rememberIntroAnimationVisit();
+}
+
+introParticleCanvas.hidden = reducedMotionPreference.matches || !shouldPlayInitialIntroAnimation;
+
+if (!reducedMotionPreference.matches && shouldPlayInitialIntroAnimation) {
   introTitle.style.opacity = '0';
 }
 
@@ -193,6 +220,8 @@ function initializeSiteShader() {
     return;
   }
 
+  pageRoot.classList.add('has-site-shader');
+
   const positionBuffer = gl.createBuffer();
   const positionLocation = gl.getAttribLocation(program, 'a_position');
   const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
@@ -232,8 +261,6 @@ function initializeSiteShader() {
   }
 
   function renderShader(now = performance.now()) {
-    resizeShader();
-
     const targetLightAmount = pageRoot.classList.contains('is-light-theme') ? 1 : 0;
     const frameDelta = Math.min((now - previousFrameAt) / 1000, 0.05);
     const themeEasing = reducedMotionPreference.matches ? 1 : 1 - Math.exp(-frameDelta * 3.5);
@@ -288,6 +315,7 @@ function initializeSiteShader() {
     if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
     startedAt = performance.now();
     previousFrameAt = startedAt;
+    resizeShader();
     handleScroll();
     animationFrameId = requestAnimationFrame(renderShader);
   }
@@ -304,6 +332,7 @@ function initializeSiteShader() {
     if (reducedMotionPreference.matches) renderShader();
   }).observe(pageRoot, { attributes: true, attributeFilter: ['class'] });
 
+  resizeShader();
   handleScroll();
   renderShader();
 }
@@ -481,6 +510,7 @@ const PROJECT_TRANSITION_TIMING = Object.freeze({
 
 let introParticleAnimationFrameId = null;
 let hasCompletedInitialIntroAnimation = false;
+let hasStartedInitialIntroAnimation = false;
 let resolveInitialIntroAnimation;
 const initialIntroAnimationComplete = new Promise((resolve) => {
   resolveInitialIntroAnimation = resolve;
@@ -566,12 +596,21 @@ function createIntroParticleTargets() {
 }
 
 function playIntroParticleMerge() {
+  if (!shouldPlayInitialIntroAnimation || hasStartedInitialIntroAnimation) {
+    introParticleCanvas.hidden = true;
+    introTitle.style.removeProperty('opacity');
+    markInitialIntroAnimationComplete();
+    return;
+  }
+
   if (reducedMotionPreference.matches || gridPage.hidden) {
     introParticleCanvas.hidden = true;
     introTitle.style.removeProperty('opacity');
     markInitialIntroAnimationComplete();
     return;
   }
+
+  hasStartedInitialIntroAnimation = true;
 
   if (introParticleAnimationFrameId !== null) {
     cancelAnimationFrame(introParticleAnimationFrameId);
@@ -672,6 +711,11 @@ function playIntroParticleMerge() {
 }
 
 document.fonts.ready.then(() => {
+  if (!shouldPlayInitialIntroAnimation) {
+    markInitialIntroAnimationComplete();
+    return;
+  }
+
   if (!('IntersectionObserver' in window)) {
     playIntroParticleMerge();
     return;
@@ -698,6 +742,16 @@ document.fonts.ready.then(() => {
 
 if (!reducedMotionPreference.matches) {
   cardGrids.forEach((grid) => {
+    const gridBounds = grid.getBoundingClientRect();
+    const isGridInitiallyVisible = gridBounds.right > 0
+      && gridBounds.left < window.innerWidth
+      && gridBounds.bottom > 0
+      && gridBounds.top < window.innerHeight;
+
+    // Entrance animations that start fully off-screen finish before anyone can
+    // see them, but still consume paint and compositing time during page load.
+    if (!isGridInitiallyVisible) return;
+
     const gridCards = [...grid.querySelectorAll('.card:not(.motion-prototype-card)')];
 
     gridCards.forEach((card, cardIndex) => {
@@ -862,7 +916,7 @@ function renderProjectGallery(project) {
       <div class="case-study__gallery" tabindex="0" aria-label="Double AI product direction; scroll horizontally to view all frames">
         ${project.gallery.map(({ src, alt }) => `
           <figure class="case-study__gallery-frame">
-            <img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy" />
+            <img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" width="1379" height="774" loading="lazy" decoding="async" />
           </figure>
         `).join('')}
       </div>
@@ -965,7 +1019,7 @@ function renderCaseStudy(project) {
         </div>
 
         <figure class="case-study__hero-media">
-          <img src="${escapeHtml(project.image)}" alt="${escapeHtml(project.title)}" />
+          <img src="${escapeHtml(project.image)}" alt="${escapeHtml(project.title)}" width="1440" height="1024" decoding="async" fetchpriority="high" />
         </figure>
 
         <p class="case-study__hook">${escapeHtml(project.hook)}</p>
@@ -1836,6 +1890,7 @@ navigationTrack.addEventListener('pointerleave', () => {
 /* ---------- Cursor-reactive navigation lines ---------- */
 
 let navigationLines = [];
+let activeNavigationLineIndexes = new Set();
 let pendingLineAnimationFrame = null;
 let latestPointerPosition = null;
 
@@ -1855,14 +1910,20 @@ function createNavigationLines() {
   });
 
   navigationLinesContainer.replaceChildren(...navigationLines);
+  activeNavigationLineIndexes.clear();
 }
 
 function resetNavigationLines() {
-  navigationLines.forEach((line) => {
+  activeNavigationLineIndexes.forEach((lineIndex) => {
+    const line = navigationLines[lineIndex];
+    if (!line) return;
+
     line.style.removeProperty('--line-scale');
     line.style.removeProperty('--line-offset');
     line.style.removeProperty('--line-opacity');
   });
+
+  activeNavigationLineIndexes.clear();
 }
 
 function animateNavigationLines() {
@@ -1885,8 +1946,20 @@ function animateNavigationLines() {
   const linesTotalWidth = navigationLines.length * lineWidth
     + (navigationLines.length - 1) * gapBetweenLines;
   const firstLineCenter = (lineLayerBounds.width - linesTotalWidth) / 2 + lineWidth / 2;
+  const firstInfluencedLine = clamp(
+    Math.floor((pointerX - influenceRadius - firstLineCenter) / lineStep),
+    0,
+    navigationLines.length - 1
+  );
+  const lastInfluencedLine = clamp(
+    Math.ceil((pointerX + influenceRadius - firstLineCenter) / lineStep),
+    0,
+    navigationLines.length - 1
+  );
+  const nextActiveLineIndexes = new Set();
 
-  navigationLines.forEach((line, lineIndex) => {
+  for (let lineIndex = firstInfluencedLine; lineIndex <= lastInfluencedLine; lineIndex += 1) {
+    const line = navigationLines[lineIndex];
     const linePositionX = firstLineCenter + lineIndex * lineStep;
     const distanceFromPointer = Math.abs(linePositionX - pointerX);
     const influence = Math.max(0, 1 - distanceFromPointer / influenceRadius);
@@ -1899,7 +1972,19 @@ function animateNavigationLines() {
     line.style.setProperty('--line-scale', heightScale.toFixed(3));
     line.style.setProperty('--line-offset', `${verticalOffset.toFixed(2)}px`);
     line.style.setProperty('--line-opacity', opacity.toFixed(3));
+    nextActiveLineIndexes.add(lineIndex);
+  }
+
+  activeNavigationLineIndexes.forEach((lineIndex) => {
+    if (nextActiveLineIndexes.has(lineIndex)) return;
+
+    const line = navigationLines[lineIndex];
+    line.style.removeProperty('--line-scale');
+    line.style.removeProperty('--line-offset');
+    line.style.removeProperty('--line-opacity');
   });
+
+  activeNavigationLineIndexes = nextActiveLineIndexes;
 }
 
 navigationTrack.addEventListener('pointermove', (event) => {
@@ -1972,18 +2057,39 @@ cardCollection.addEventListener('wheel', (event) => {
 cards.forEach((card) => {
   if (card.classList.contains('card--static') || card.classList.contains('card--no-tilt')) return;
 
+  let pendingTiltAnimationFrame = null;
+  let latestCardPointerPosition = null;
+
   card.addEventListener('pointermove', (event) => {
     if (reducedMotionPreference.matches) return;
 
-    const cardBounds = card.getBoundingClientRect();
-    const horizontalPointerPosition = (event.clientX - cardBounds.left) / cardBounds.width - 0.5;
-    const verticalPointerPosition = (event.clientY - cardBounds.top) / cardBounds.height - 0.5;
+    latestCardPointerPosition = { x: event.clientX, y: event.clientY };
+    if (pendingTiltAnimationFrame !== null) return;
 
-    card.style.setProperty('--rx', `${(-verticalPointerPosition * 1.6).toFixed(2)}deg`);
-    card.style.setProperty('--ry', `${(horizontalPointerPosition * 1.6).toFixed(2)}deg`);
+    pendingTiltAnimationFrame = requestAnimationFrame(() => {
+      pendingTiltAnimationFrame = null;
+      if (!latestCardPointerPosition) return;
+
+      const cardBounds = card.getBoundingClientRect();
+      const horizontalPointerPosition = (
+        latestCardPointerPosition.x - cardBounds.left
+      ) / cardBounds.width - 0.5;
+      const verticalPointerPosition = (
+        latestCardPointerPosition.y - cardBounds.top
+      ) / cardBounds.height - 0.5;
+
+      card.style.setProperty('--rx', `${(-verticalPointerPosition * 1.6).toFixed(2)}deg`);
+      card.style.setProperty('--ry', `${(horizontalPointerPosition * 1.6).toFixed(2)}deg`);
+    });
   });
 
   card.addEventListener('pointerleave', () => {
+    latestCardPointerPosition = null;
+    if (pendingTiltAnimationFrame !== null) {
+      cancelAnimationFrame(pendingTiltAnimationFrame);
+      pendingTiltAnimationFrame = null;
+    }
+
     card.style.setProperty('--rx', '0deg');
     card.style.setProperty('--ry', '0deg');
   });
@@ -2179,7 +2285,11 @@ function showWelcomeToast() {
 }
 
 async function playWelcomeCelebration() {
-  if (hasPlayedWelcomeCelebration || gridPage.hidden) return;
+  if (
+    !shouldPlayInitialIntroAnimation
+    || hasPlayedWelcomeCelebration
+    || gridPage.hidden
+  ) return;
 
   hasPlayedWelcomeCelebration = true;
   await waitForAnimationSequence(introToConfettiDelay);

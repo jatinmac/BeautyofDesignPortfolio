@@ -871,7 +871,7 @@ body.is-card-transitioning .detail-page {
   display: grid;
   gap: 3px;
   padding: 8px 0;
-  border-top: 1px solid var(--edge);
+  border-top: 1px solid var(--tag-edge);
 }
 
 .about-card small {
@@ -901,7 +901,7 @@ body.is-card-transitioning .detail-page {
   display: grid;
   gap: 6px;
   padding-top: 10px;
-  border-top: 1px solid var(--edge);
+  border-top: 1px solid var(--tag-edge);
 }
 
 .about-card__skill-groups h2,
@@ -1318,7 +1318,7 @@ body.is-card-transitioning .detail-page {
   gap: 5px;
   min-height: 70px;
   padding: 13px 12px 13px 40px;
-  border-top: 1px solid var(--edge);
+  border-top: 1px solid var(--tag-edge);
   font-size: var(--card-text-size);
   font-weight: 400;
   line-height: 1.45;
@@ -1362,7 +1362,7 @@ body.is-card-transitioning .detail-page {
   display: grid;
   gap: 5px;
   padding: 14px 0;
-  border-top: 1px solid var(--edge);
+  border-top: 1px solid var(--tag-edge);
   color: var(--text);
   font-size: var(--card-text-size);
   font-weight: 400;

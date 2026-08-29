@@ -7,45 +7,9 @@
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* Color palette */
-  --page: #30302f;
-  --surface: #373737;
-  --surface-hover: #3b3b3b;
-  --edge: #464646;
-  --shadow: rgba(0, 0, 0, 0.42);
-  --text: #dedede;
-  --glass-card: rgba(24, 27, 33, 0.4);
-  --glass-card-hover: rgba(34, 38, 45, 0.52);
-  --glass-edge: rgba(255, 255, 255, 0.28);
-  --glass-depth: rgba(3, 8, 16, 0.2);
-  --glass-shadow: rgba(0, 0, 0, 0.34);
-  --intro-text: #f3f3f1;
-  --intro-text-muted: rgba(243, 243, 241, 0.76);
-  --intro-text-strong: #ffffff;
-  --intro-card-edge: rgba(255, 255, 255, 0.14);
-  --intro-card-shadow: rgba(0, 0, 0, 0.38);
-  --site-background-color: #050505;
-  --site-background:
-    radial-gradient(ellipse 46% 40% at 96% 2%, #e51f1b 0%, rgba(161, 24, 31, 0.62) 35%, transparent 72%),
-    radial-gradient(ellipse 52% 52% at 24% 108%, #0085ed 0%, rgba(0, 83, 183, 0.78) 40%, transparent 76%),
-    radial-gradient(ellipse 50% 44% at 72% 104%, #2736c8 0%, rgba(42, 40, 151, 0.68) 38%, transparent 76%),
-    #020713;
-
-  /* Shared dimensions and alignment */
-  --control-size: 58px;
-  --corner-radius: 8px;
-  --navigation-width: 796px;
-  --navigation-alignment: max(24px, calc((100vw - var(--navigation-width)) / 2));
-
-  /* Shared card typography used across Work, Builds, About, and More. */
-  --card-text-size: 12px;
-  --card-meta-size: 9px;
-}
-
-html.is-light-theme {
-  color-scheme: light;
   --page: #ededeb;
   --surface: #f5f5f3;
   --surface-hover: #ffffff;
@@ -61,13 +25,34 @@ html.is-light-theme {
   --intro-text-muted: rgba(32, 41, 54, 0.76);
   --intro-text-strong: #111820;
   --intro-card-edge: rgba(32, 41, 54, 0.16);
+  --tag-edge: rgba(64, 0, 255, 0.32);
   --intro-card-shadow: rgba(62, 81, 104, 0.2);
-  --site-background-color: #f5f7ff;
-  --site-background:
-    radial-gradient(ellipse 46% 40% at 96% 2%, #ff3c2f 0%, rgba(255, 130, 105, 0.58) 36%, transparent 73%),
-    radial-gradient(ellipse 52% 52% at 24% 108%, #008cf0 0%, rgba(59, 151, 238, 0.68) 42%, transparent 77%),
-    radial-gradient(ellipse 50% 44% at 72% 104%, #3c43e3 0%, rgba(88, 86, 221, 0.58) 40%, transparent 77%),
-    #f3f5f8;
+  --site-background-color: #fffdff;
+  --site-background: linear-gradient(
+    to bottom,
+    #fffdff 0%,
+    #ffe9ff 8%,
+    #ffd5ff 16%,
+    #ffbfff 25%,
+    #ffa5ff 35%,
+    #dc8dff 45%,
+    #b774ff 55%,
+    #925bff 65%,
+    #6d41ff 75%,
+    #4829ff 85%,
+    #2e17ff 92%,
+    #1103ff 100%
+  );
+
+  /* Shared dimensions and alignment */
+  --control-size: 58px;
+  --corner-radius: 8px;
+  --navigation-width: 734px;
+  --navigation-alignment: max(24px, calc((100vw - var(--navigation-width)) / 2));
+
+  /* Shared card typography used across Work, Builds, About, and More. */
+  --card-text-size: 12px;
+  --card-meta-size: 9px;
 }
 
 /* ---------- Base styles ---------- */
@@ -90,14 +75,14 @@ body {
   background-color: var(--site-background-color);
   background-image: var(--site-background);
   background-attachment: fixed;
-  background-position: 48% 48%;
-  background-size: 112% 112%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
   font-family: "Inter", sans-serif;
   font-optical-sizing: auto;
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
-  animation: site-background-drift 26s ease-in-out infinite alternate;
   transition: background-color 500ms ease;
 }
 
@@ -151,7 +136,6 @@ button {
 
 /* ---------- Shared controls ---------- */
 
-.theme-control,
 .navigation-control,
 .ball-control,
 .detail-back-button {
@@ -167,7 +151,6 @@ button {
   transition: transform 220ms ease, background-color 220ms ease, border-color 220ms ease;
 }
 
-.theme-control:hover,
 .navigation-control:hover,
 .ball-control:hover,
 .detail-back-button:hover {
@@ -175,7 +158,6 @@ button {
   background: var(--surface-hover);
 }
 
-.theme-control:focus-visible,
 .navigation-control:focus-visible,
 .ball-control:focus-visible,
 .navigation-end:focus-visible,
@@ -189,7 +171,7 @@ button {
 
 .grid-navigation {
   display: grid;
-  grid-template-columns: 56px 500px 104px 56px 56px;
+  grid-template-columns: 56px 500px 104px 56px;
   gap: 6px;
   width: var(--navigation-width);
   margin-left: var(--navigation-alignment);
@@ -200,13 +182,7 @@ button {
   place-items: center;
   width: 56px;
   height: 56px;
-}
-
-.grid-navigation .theme-control {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
+  border: 0;
 }
 
 .ball-control {
@@ -214,13 +190,14 @@ button {
   place-items: center;
   width: 56px;
   height: 56px;
+  border: 0;
 }
 
 .material-symbols-rounded.ball-control__orb {
   width: auto;
   height: auto;
   background: transparent;
-  color: #ffffff;
+  color: #111111;
   font-size: 27px;
   font-variation-settings:
     "FILL" 1,
@@ -231,10 +208,6 @@ button {
     color 220ms ease,
     font-size 220ms cubic-bezier(0.22, 1, 0.36, 1),
     transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-html.is-light-theme .ball-control__orb {
-  color: #111111;
 }
 
 .ball-control.is-lightning .ball-control__orb {
@@ -487,49 +460,22 @@ html.is-light-theme .ball-control__orb {
   vertical-align: -0.12em;
 }
 
-.theme-icon {
-  grid-area: 1 / 1;
-  color: var(--text);
-  font-size: 24px;
-  transition: opacity 180ms ease, transform 240ms ease;
-}
-
-.theme-icon--dark {
-  opacity: 0;
-  transform: rotate(-45deg) scale(0.6);
-}
-
-.theme-control.is-light-theme .theme-icon--light {
-  opacity: 0;
-  transform: rotate(45deg) scale(0.6);
-}
-
-.theme-control.is-light-theme .theme-icon--dark {
-  opacity: 1;
-  transform: rotate(0) scale(1);
-}
-
 .navigation-logo {
   display: block;
   width: 32px;
   height: 32px;
-  filter: none;
+  filter: invert(1);
   object-fit: contain;
   pointer-events: none;
   transition: filter 220ms ease;
   user-select: none;
 }
 
-/* The source SVG is white; invert it to dark when the light theme is active. */
-html.is-light-theme .navigation-logo {
-  filter: invert(1);
-}
-
 .navigation-track {
   position: relative;
   height: 56px;
   overflow: hidden;
-  border: 1px solid var(--edge);
+  border: 0;
   border-radius: var(--corner-radius);
   background: var(--surface);
   box-shadow: 0 2px 1px var(--shadow);
@@ -654,7 +600,7 @@ html.is-light-theme .navigation-logo {
   justify-content: center;
   height: 56px;
   padding: 0;
-  border: 1px solid var(--edge);
+  border: 0;
   border-radius: var(--corner-radius) 28px 28px var(--corner-radius);
   background: var(--surface);
   box-shadow: 0 2px 1px var(--shadow);
@@ -866,7 +812,7 @@ body.is-card-transitioning .detail-page {
 
 .project-card__tags li {
   padding: 4px 6px;
-  border: 1px solid var(--edge);
+  border: 1px solid var(--tag-edge);
   border-radius: 4px;
   color: var(--text);
   font-size: var(--card-meta-size);
@@ -1253,7 +1199,7 @@ body.is-card-transitioning .detail-page {
 .prototype-toggle__count {
   width: max-content;
   padding: 4px 6px;
-  border: 1px solid var(--edge);
+  border: 1px solid var(--tag-edge);
   border-radius: 4px;
   font-size: 9px;
   line-height: 1;
@@ -1616,7 +1562,7 @@ body.is-card-transitioning .detail-page {
 
 .case-study__tags li {
   padding: 6px 8px;
-  border: 1px solid var(--edge);
+  border: 1px solid var(--tag-edge);
   border-radius: 999px;
   font-size: 9px;
   line-height: 1;
@@ -1906,20 +1852,14 @@ body.is-card-transitioning .detail-page {
   }
 
   .grid-navigation {
-    grid-template-columns: 48px minmax(64px, 1fr) 64px 48px 48px;
+    grid-template-columns: 48px minmax(64px, 1fr) 64px 48px;
     gap: 4px;
     width: 100%;
     margin-left: 0;
   }
 
   .navigation-control,
-  .ball-control,
-  .theme-control {
-    width: var(--control-size);
-    height: var(--control-size);
-  }
-
-  .grid-navigation .theme-control {
+  .ball-control {
     width: var(--control-size);
     height: var(--control-size);
   }

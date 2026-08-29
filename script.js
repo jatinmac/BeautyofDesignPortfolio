@@ -7,8 +7,6 @@ const siteHeader = document.querySelector('.site-header');
 const detailPage = document.querySelector('.detail-page');
 const detailContent = document.querySelector('.detail-content');
 const detailBackButton = document.querySelector('.detail-back-button');
-const themeButton = document.querySelector('.theme-control');
-const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 const ballButton = document.querySelector('.ball-control');
 const cardCollection = document.querySelector('.collections');
 const navigationTrack = document.querySelector('.navigation-track');
@@ -65,6 +63,8 @@ if (!reducedMotionPreference.matches && shouldPlayInitialIntroAnimation) {
 /* ---------- Living site background ---------- */
 
 function initializeSiteShader() {
+  if (!siteShaderCanvas || siteShaderCanvas.hidden) return;
+
   const gl = siteShaderCanvas.getContext('webgl', {
     alpha: false,
     antialias: false,
@@ -164,19 +164,19 @@ function initializeSiteShader() {
       float blueCore = glowBlob(warped, blueCenter, vec2(0.31, 0.31));
       float deepBlue = glowBlob(warped, deepBlueCenter, vec2(0.43, 0.32));
 
-      vec3 darkColor = vec3(0.008, 0.014, 0.026);
-      darkColor = mix(darkColor, vec3(0.18, 0.035, 0.045), redHalo * 0.56);
-      darkColor = mix(darkColor, vec3(0.91, 0.12, 0.10), redCore * 0.76);
-      darkColor = mix(darkColor, vec3(0.00, 0.24, 0.54), blueHalo * 0.58);
-      darkColor = mix(darkColor, vec3(0.00, 0.49, 0.92), blueCore * 0.80);
-      darkColor = mix(darkColor, vec3(0.15, 0.22, 0.78), deepBlue * 0.67);
+      vec3 darkColor = vec3(0.071, 0.012, 0.039);
+      darkColor = mix(darkColor, vec3(0.906, 0.212, 0.380), redHalo * 0.64);
+      darkColor = mix(darkColor, vec3(1.0, 0.153, 0.384), redCore * 0.82);
+      darkColor = mix(darkColor, vec3(0.933, 0.545, 0.635), blueHalo * 0.52);
+      darkColor = mix(darkColor, vec3(1.0, 0.329, 0.498), blueCore * 0.76);
+      darkColor = mix(darkColor, vec3(0.906, 0.212, 0.380), deepBlue * 0.72);
 
-      vec3 lightColor = vec3(0.955, 0.962, 0.975);
-      lightColor = mix(lightColor, vec3(1.0, 0.77, 0.68), redHalo * 0.47);
-      lightColor = mix(lightColor, vec3(1.0, 0.22, 0.15), redCore * 0.73);
-      lightColor = mix(lightColor, vec3(0.55, 0.82, 0.98), blueHalo * 0.43);
-      lightColor = mix(lightColor, vec3(0.00, 0.48, 0.95), blueCore * 0.78);
-      lightColor = mix(lightColor, vec3(0.24, 0.24, 0.92), deepBlue * 0.61);
+      vec3 lightColor = vec3(1.0, 0.953, 0.969);
+      lightColor = mix(lightColor, vec3(0.933, 0.545, 0.635), redHalo * 0.58);
+      lightColor = mix(lightColor, vec3(1.0, 0.153, 0.384), redCore * 0.76);
+      lightColor = mix(lightColor, vec3(0.933, 0.545, 0.635), blueHalo * 0.51);
+      lightColor = mix(lightColor, vec3(1.0, 0.329, 0.498), blueCore * 0.72);
+      lightColor = mix(lightColor, vec3(0.906, 0.212, 0.380), deepBlue * 0.66);
 
       vec3 color = mix(darkColor, lightColor, u_light);
 
@@ -233,7 +233,7 @@ function initializeSiteShader() {
   const pointerCurrent = { x: 0.5, y: 0.5 };
   const scrollTarget = { x: 0, y: 0 };
   const scrollCurrent = { x: 0, y: 0 };
-  let lightAmount = pageRoot.classList.contains('is-light-theme') ? 1 : 0;
+  let lightAmount = 1;
   let animationFrameId = null;
   let startedAt = performance.now();
   let previousFrameAt = startedAt;
@@ -261,7 +261,7 @@ function initializeSiteShader() {
   }
 
   function renderShader(now = performance.now()) {
-    const targetLightAmount = pageRoot.classList.contains('is-light-theme') ? 1 : 0;
+    const targetLightAmount = 1;
     const frameDelta = Math.min((now - previousFrameAt) / 1000, 0.05);
     const themeEasing = reducedMotionPreference.matches ? 1 : 1 - Math.exp(-frameDelta * 3.5);
     const pointerEasing = reducedMotionPreference.matches ? 1 : 1 - Math.exp(-frameDelta * 4.5);
@@ -492,7 +492,6 @@ const PROJECTS_BY_ID = new Map(PROJECT_CASE_STUDIES.map((project) => [project.id
 
 /* ---------- Interaction state ---------- */
 
-let isAlternateThemeActive = true;
 let horizontalScrollTarget = 0;
 let scrollAnimationFrameId = null;
 let scrollSnapTimerId = null;
@@ -1420,31 +1419,6 @@ if (initialProjectMatch) {
   showCardDetail(initialProjectMatch[1], projectTitle, false);
 }
 
-/* ---------- Theme control ---------- */
-
-themeButton.addEventListener('click', () => {
-  isAlternateThemeActive = !isAlternateThemeActive;
-
-  pageRoot.style.setProperty('--page', isAlternateThemeActive ? '#ededeb' : '#30302f');
-  pageRoot.style.setProperty('--surface', isAlternateThemeActive ? '#f5f5f3' : '#373737');
-  pageRoot.style.setProperty('--surface-hover', isAlternateThemeActive ? '#ffffff' : '#3b3b3b');
-  pageRoot.style.setProperty('--edge', isAlternateThemeActive ? '#d2d2cf' : '#464646');
-  pageRoot.style.setProperty('--text', isAlternateThemeActive ? '#30302f' : '#dedede');
-  pageRoot.style.setProperty(
-    '--shadow',
-    isAlternateThemeActive ? 'rgba(0, 0, 0, 0.16)' : 'rgba(0, 0, 0, 0.42)'
-  );
-
-  themeButton.classList.toggle('is-light-theme', isAlternateThemeActive);
-  pageRoot.classList.toggle('is-light-theme', isAlternateThemeActive);
-  themeColorMeta.setAttribute('content', isAlternateThemeActive ? '#edf6fb' : '#020713');
-  themeButton.setAttribute('aria-pressed', String(isAlternateThemeActive));
-  themeButton.setAttribute(
-    'aria-label',
-    isAlternateThemeActive ? 'Switch to dark mode' : 'Switch to light mode'
-  );
-});
-
 /* ---------- Playful falling balls ---------- */
 
 function setBallControlMode(mode) {
@@ -1466,10 +1440,8 @@ function dropBalls(onComplete) {
   const ballCount = prefersReducedMotion ? 10 : 30;
   const ballSize = 34;
   const balls = [];
-  const ballColor = isAlternateThemeActive ? '#111111' : '#ffffff';
-  const burstColors = isAlternateThemeActive
-    ? ['#111111', '#ff477e', '#ffb703', '#1677ff', '#00a878']
-    : ['#ffffff', '#ff5c8a', '#ffd84d', '#7aa7ff', '#6df0c2'];
+  const ballColor = '#111111';
+  const burstColors = ['#111111', '#ff477e', '#ffb703', '#1677ff', '#00a878'];
   const burstStartsAt = prefersReducedMotion ? 1500 : 4050;
   const burstStagger = prefersReducedMotion ? 160 : 480;
   const animationEndsAt = prefersReducedMotion ? 1900 : 5300;
@@ -1650,10 +1622,8 @@ function dropBalls(onComplete) {
 
 function showLightning(onComplete) {
   const layer = document.createElement('div');
-  const lightningColor = isAlternateThemeActive ? '#111111' : '#ffffff';
-  const lightningFlash = isAlternateThemeActive
-    ? 'rgba(17, 17, 17, 0.14)'
-    : 'rgba(255, 255, 255, 0.18)';
+  const lightningColor = '#111111';
+  const lightningFlash = 'rgba(17, 17, 17, 0.14)';
 
   layer.className = 'lightning-layer';
   layer.setAttribute('aria-hidden', 'true');

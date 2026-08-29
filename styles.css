@@ -604,9 +604,7 @@ button {
   position: relative;
   border: 0;
   border-radius: var(--corner-radius);
-  background:
-    linear-gradient(135deg, transparent 72%, var(--glass-depth)),
-    var(--glass-card);
+  background: rgba(255, 255, 255, 1.0);
   background-clip: padding-box;
   box-shadow: none;
   cursor: pointer;
@@ -639,9 +637,7 @@ button {
 }
 
 .card:hover {
-  background:
-    linear-gradient(135deg, transparent 72%, var(--glass-depth)),
-    var(--glass-card-hover);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 /* Project cards lift into isolated transition layers before the detail reveal. */

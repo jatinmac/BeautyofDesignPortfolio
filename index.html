@@ -22,15 +22,13 @@
       rel="stylesheet"
     />
     <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0&amp;icon_names=arrow_back,arrow_forward,bolt,circle,close,open_in_new"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0&amp;icon_names=arrow_back,arrow_forward,close,open_in_new"
       rel="stylesheet"
     />
 
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <canvas class="site-shader" aria-hidden="true" hidden></canvas>
-
     <main class="page-shell">
       <!-- Top navigation controls -->
       <header class="site-header">
@@ -110,7 +108,20 @@
             aria-label="Drop playful balls"
             title="Drop balls"
           >
-            <span class="material-symbols-rounded ball-control__orb" aria-hidden="true">circle</span>
+            <video
+              class="ball-control__orb-video"
+              autoplay
+              loop
+              muted
+              playsinline
+              preload="auto"
+              aria-hidden="true"
+            >
+              <source
+                src="make_an_ai_orb_video_with_comp%20(online-video-cutter.com).mp4"
+                type="video/mp4"
+              />
+            </video>
           </button>
 
         </nav>

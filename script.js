@@ -1,7 +1,6 @@
 /* ---------- Elements ---------- */
 
 const pageRoot = document.documentElement;
-const siteShaderCanvas = document.querySelector('.site-shader');
 const gridPage = document.querySelector('.page-shell');
 const siteHeader = document.querySelector('.site-header');
 const detailPage = document.querySelector('.detail-page');
@@ -26,318 +25,17 @@ const introTitle = introCard.querySelector('h1');
 const introParticleCanvas = introCard.querySelector('.intro-card__particles');
 const reducedMotionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
 const mobileLayoutPreference = window.matchMedia('(max-width: 760px)');
-const INTRO_ANIMATION_STORAGE_KEY = 'jatin-davis-intro-seen';
 
 document.querySelectorAll('img').forEach((image) => {
   image.decoding = 'async';
 });
 
-function hasSeenIntroAnimation() {
-  try {
-    return window.localStorage.getItem(INTRO_ANIMATION_STORAGE_KEY) === 'true';
-  } catch {
-    return false;
-  }
-}
+introParticleCanvas.hidden = reducedMotionPreference.matches;
 
-function rememberIntroAnimationVisit() {
-  try {
-    window.localStorage.setItem(INTRO_ANIMATION_STORAGE_KEY, 'true');
-  } catch {
-    // The in-memory guard below still prevents replays during this page visit.
-  }
-}
-
-const shouldPlayInitialIntroAnimation = !hasSeenIntroAnimation();
-
-if (shouldPlayInitialIntroAnimation) {
-  rememberIntroAnimationVisit();
-}
-
-introParticleCanvas.hidden = reducedMotionPreference.matches || !shouldPlayInitialIntroAnimation;
-
-if (!reducedMotionPreference.matches && shouldPlayInitialIntroAnimation) {
+if (!reducedMotionPreference.matches) {
   introTitle.style.opacity = '0';
 }
 
-/* ---------- Living site background ---------- */
-
-function initializeSiteShader() {
-  if (!siteShaderCanvas || siteShaderCanvas.hidden) return;
-
-  const gl = siteShaderCanvas.getContext('webgl', {
-    alpha: false,
-    antialias: false,
-    depth: false,
-    powerPreference: 'low-power'
-  });
-
-  if (!gl) {
-    siteShaderCanvas.hidden = true;
-    return;
-  }
-
-  const vertexShaderSource = `
-    attribute vec2 a_position;
-
-    void main() {
-      gl_Position = vec4(a_position, 0.0, 1.0);
-    }
-  `;
-
-  const fragmentShaderSource = `
-    precision mediump float;
-
-    uniform vec2 u_resolution;
-    uniform vec2 u_pointer;
-    uniform vec2 u_scroll;
-    uniform float u_time;
-    uniform float u_light;
-
-    float hash(vec2 point) {
-      return fract(sin(dot(point, vec2(127.1, 311.7))) * 43758.5453123);
-    }
-
-    float noise(vec2 point) {
-      vec2 cell = floor(point);
-      vec2 local = fract(point);
-      local = local * local * (3.0 - 2.0 * local);
-
-      return mix(
-        mix(hash(cell), hash(cell + vec2(1.0, 0.0)), local.x),
-        mix(hash(cell + vec2(0.0, 1.0)), hash(cell + vec2(1.0)), local.x),
-        local.y
-      );
-    }
-
-    float fbm(vec2 point) {
-      float value = 0.0;
-      float amplitude = 0.5;
-
-      for (int octave = 0; octave < 4; octave++) {
-        value += noise(point) * amplitude;
-        point = mat2(1.62, 1.18, -1.18, 1.62) * point + 0.37;
-        amplitude *= 0.5;
-      }
-
-      return value;
-    }
-
-    float glowBlob(vec2 point, vec2 center, vec2 scale) {
-      vec2 delta = (point - center) / scale;
-      return exp(-dot(delta, delta) * 1.65);
-    }
-
-    void main() {
-      vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-      float time = u_time;
-      float scrollPhase = u_scroll.x * 0.36 + u_scroll.y * 0.48;
-      vec2 pointerOffset = (u_pointer - 0.5) * vec2(0.035, 0.025);
-      vec2 scrollOffset = vec2(
-        sin(scrollPhase * 0.55) * 0.055 + u_scroll.x * 0.006,
-        cos(scrollPhase * 0.42) * 0.035 - u_scroll.y * 0.006
-      );
-
-      vec2 flowSample = uv * 1.15;
-      vec2 flow = vec2(
-        fbm(flowSample + vec2(time * 0.024, -time * 0.018 + scrollPhase * 0.22)),
-        fbm(flowSample + vec2(4.7 - time * 0.019, 2.1 + time * 0.022 - scrollPhase * 0.2))
-      ) - 0.5;
-      vec2 warped = uv + flow * 0.042 + pointerOffset + scrollOffset;
-
-      vec2 redCenter = vec2(
-        0.91 + sin(time * 0.072 + scrollPhase) * 0.045,
-        0.91 + cos(time * 0.058 - scrollPhase) * 0.038
-      );
-      vec2 blueCenter = vec2(
-        0.31 + cos(time * 0.052 - scrollPhase * 0.7) * 0.055,
-        0.12 + sin(time * 0.069 + scrollPhase) * 0.042
-      );
-      vec2 deepBlueCenter = vec2(
-        0.69 + sin(time * 0.061 + 1.4 + scrollPhase) * 0.052,
-        0.18 + cos(time * 0.047 + scrollPhase * 0.8) * 0.044
-      );
-
-      float redHalo = glowBlob(warped, redCenter, vec2(0.42, 0.34));
-      float redCore = glowBlob(warped, redCenter, vec2(0.27, 0.23));
-      float blueHalo = glowBlob(warped, blueCenter, vec2(0.47, 0.39));
-      float blueCore = glowBlob(warped, blueCenter, vec2(0.31, 0.31));
-      float deepBlue = glowBlob(warped, deepBlueCenter, vec2(0.43, 0.32));
-
-      vec3 darkColor = vec3(0.071, 0.012, 0.039);
-      darkColor = mix(darkColor, vec3(0.906, 0.212, 0.380), redHalo * 0.64);
-      darkColor = mix(darkColor, vec3(1.0, 0.153, 0.384), redCore * 0.82);
-      darkColor = mix(darkColor, vec3(0.933, 0.545, 0.635), blueHalo * 0.52);
-      darkColor = mix(darkColor, vec3(1.0, 0.329, 0.498), blueCore * 0.76);
-      darkColor = mix(darkColor, vec3(0.906, 0.212, 0.380), deepBlue * 0.72);
-
-      vec3 lightColor = vec3(1.0, 0.953, 0.969);
-      lightColor = mix(lightColor, vec3(0.933, 0.545, 0.635), redHalo * 0.58);
-      lightColor = mix(lightColor, vec3(1.0, 0.153, 0.384), redCore * 0.76);
-      lightColor = mix(lightColor, vec3(0.933, 0.545, 0.635), blueHalo * 0.51);
-      lightColor = mix(lightColor, vec3(1.0, 0.329, 0.498), blueCore * 0.72);
-      lightColor = mix(lightColor, vec3(0.906, 0.212, 0.380), deepBlue * 0.66);
-
-      vec3 color = mix(darkColor, lightColor, u_light);
-
-      float dither = hash(gl_FragCoord.xy) - 0.5;
-      color += dither * mix(0.0035, 0.002, u_light);
-
-      gl_FragColor = vec4(color, 1.0);
-    }
-  `;
-
-  function compileShader(type, source) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      console.warn('The background shader could not compile.', gl.getShaderInfoLog(shader));
-      gl.deleteShader(shader);
-      return null;
-    }
-
-    return shader;
-  }
-
-  const vertexShader = compileShader(gl.VERTEX_SHADER, vertexShaderSource);
-  const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
-
-  if (!vertexShader || !fragmentShader) {
-    siteShaderCanvas.hidden = true;
-    return;
-  }
-
-  const program = gl.createProgram();
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
-  gl.linkProgram(program);
-
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    console.warn('The background shader could not link.', gl.getProgramInfoLog(program));
-    siteShaderCanvas.hidden = true;
-    return;
-  }
-
-  pageRoot.classList.add('has-site-shader');
-
-  const positionBuffer = gl.createBuffer();
-  const positionLocation = gl.getAttribLocation(program, 'a_position');
-  const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
-  const pointerLocation = gl.getUniformLocation(program, 'u_pointer');
-  const scrollLocation = gl.getUniformLocation(program, 'u_scroll');
-  const timeLocation = gl.getUniformLocation(program, 'u_time');
-  const lightLocation = gl.getUniformLocation(program, 'u_light');
-  const pointerTarget = { x: 0.5, y: 0.5 };
-  const pointerCurrent = { x: 0.5, y: 0.5 };
-  const scrollTarget = { x: 0, y: 0 };
-  const scrollCurrent = { x: 0, y: 0 };
-  let lightAmount = 1;
-  let animationFrameId = null;
-  let startedAt = performance.now();
-  let previousFrameAt = startedAt;
-
-  gl.useProgram(program);
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  gl.bufferData(
-    gl.ARRAY_BUFFER,
-    new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
-    gl.STATIC_DRAW
-  );
-  gl.enableVertexAttribArray(positionLocation);
-  gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-
-  function resizeShader() {
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
-    const width = Math.round(window.innerWidth * pixelRatio);
-    const height = Math.round(window.innerHeight * pixelRatio);
-
-    if (siteShaderCanvas.width !== width || siteShaderCanvas.height !== height) {
-      siteShaderCanvas.width = width;
-      siteShaderCanvas.height = height;
-      gl.viewport(0, 0, width, height);
-    }
-  }
-
-  function renderShader(now = performance.now()) {
-    const targetLightAmount = 1;
-    const frameDelta = Math.min((now - previousFrameAt) / 1000, 0.05);
-    const themeEasing = reducedMotionPreference.matches ? 1 : 1 - Math.exp(-frameDelta * 3.5);
-    const pointerEasing = reducedMotionPreference.matches ? 1 : 1 - Math.exp(-frameDelta * 4.5);
-    const scrollEasing = reducedMotionPreference.matches ? 1 : 1 - Math.exp(-frameDelta * 7.5);
-
-    previousFrameAt = now;
-    lightAmount += (targetLightAmount - lightAmount) * themeEasing;
-    pointerCurrent.x += (pointerTarget.x - pointerCurrent.x) * pointerEasing;
-    pointerCurrent.y += (pointerTarget.y - pointerCurrent.y) * pointerEasing;
-    scrollCurrent.x += (scrollTarget.x - scrollCurrent.x) * scrollEasing;
-    scrollCurrent.y += (scrollTarget.y - scrollCurrent.y) * scrollEasing;
-
-    gl.uniform2f(resolutionLocation, siteShaderCanvas.width, siteShaderCanvas.height);
-    gl.uniform2f(pointerLocation, pointerCurrent.x, pointerCurrent.y);
-    gl.uniform2f(scrollLocation, scrollCurrent.x, scrollCurrent.y);
-    gl.uniform1f(timeLocation, reducedMotionPreference.matches ? 0 : (now - startedAt) / 1000);
-    gl.uniform1f(lightLocation, lightAmount);
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-    if (!reducedMotionPreference.matches && !document.hidden) {
-      animationFrameId = requestAnimationFrame(renderShader);
-    } else {
-      animationFrameId = null;
-    }
-  }
-
-  function handlePointerMove(event) {
-    pointerTarget.x = event.clientX / window.innerWidth;
-    pointerTarget.y = 1 - event.clientY / window.innerHeight;
-  }
-
-  function handleScroll() {
-    const maximumHorizontalScroll = Math.max(
-      cardCollection.scrollWidth - cardCollection.clientWidth,
-      1
-    );
-    const maximumVerticalScroll = Math.max(
-      document.documentElement.scrollHeight - window.innerHeight,
-      1
-    );
-
-    // Multiplying normalized progress gives the shader enough travel to remain
-    // visibly connected to long horizontal and vertical page journeys.
-    scrollTarget.x = (cardCollection.scrollLeft / maximumHorizontalScroll) * 3.2;
-    scrollTarget.y = (window.scrollY / maximumVerticalScroll) * 3.2;
-
-    if (reducedMotionPreference.matches) renderShader();
-  }
-
-  function restartShader() {
-    if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
-    startedAt = performance.now();
-    previousFrameAt = startedAt;
-    resizeShader();
-    handleScroll();
-    animationFrameId = requestAnimationFrame(renderShader);
-  }
-
-  window.addEventListener('pointermove', handlePointerMove, { passive: true });
-  window.addEventListener('scroll', handleScroll, { passive: true });
-  cardCollection.addEventListener('scroll', handleScroll, { passive: true });
-  window.addEventListener('resize', restartShader, { passive: true });
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) restartShader();
-  });
-  reducedMotionPreference.addEventListener('change', restartShader);
-  new MutationObserver(() => {
-    if (reducedMotionPreference.matches) renderShader();
-  }).observe(pageRoot, { attributes: true, attributeFilter: ['class'] });
-
-  resizeShader();
-  handleScroll();
-  renderShader();
-}
-
-initializeSiteShader();
 
 /* ---------- Project case-study content ---------- */
 
@@ -595,7 +293,7 @@ function createIntroParticleTargets() {
 }
 
 function playIntroParticleMerge() {
-  if (!shouldPlayInitialIntroAnimation || hasStartedInitialIntroAnimation) {
+  if (hasStartedInitialIntroAnimation) {
     introParticleCanvas.hidden = true;
     introTitle.style.removeProperty('opacity');
     markInitialIntroAnimationComplete();
@@ -710,11 +408,6 @@ function playIntroParticleMerge() {
 }
 
 document.fonts.ready.then(() => {
-  if (!shouldPlayInitialIntroAnimation) {
-    markInitialIntroAnimationComplete();
-    return;
-  }
-
   if (!('IntersectionObserver' in window)) {
     playIntroParticleMerge();
     return;
@@ -1421,27 +1114,12 @@ if (initialProjectMatch) {
 
 /* ---------- Playful falling balls ---------- */
 
-function setBallControlMode(mode) {
-  const isLightningMode = mode === 'lightning';
-
-  ballButton.classList.toggle('is-lightning', isLightningMode);
-  ballButton.querySelector('.ball-control__orb').textContent = isLightningMode ? 'bolt' : 'circle';
-  ballButton.dataset.effectMode = mode;
-  ballButton.setAttribute(
-    'aria-label',
-    isLightningMode ? 'Trigger lightning' : 'Drop playful balls'
-  );
-  ballButton.title = isLightningMode ? 'Trigger lightning' : 'Drop balls';
-}
-
 function dropBalls(onComplete) {
   const layer = document.createElement('div');
   const prefersReducedMotion = reducedMotionPreference.matches;
   const ballCount = prefersReducedMotion ? 10 : 30;
   const ballSize = 34;
   const balls = [];
-  const ballColor = '#111111';
-  const burstColors = ['#111111', '#ff477e', '#ffb703', '#1677ff', '#00a878'];
   const burstStartsAt = prefersReducedMotion ? 1500 : 4050;
   const burstStagger = prefersReducedMotion ? 160 : 480;
   const animationEndsAt = prefersReducedMotion ? 1900 : 5300;
@@ -1455,15 +1133,17 @@ function dropBalls(onComplete) {
   for (let index = 0; index < ballCount; index += 1) {
     const element = document.createElement('span');
     const size = ballSize;
+    const hue = Math.floor(Math.random() * 360);
 
     element.className = 'falling-ball';
     element.style.setProperty('--ball-size', `${size}px`);
-    element.style.setProperty('--ball-color', ballColor);
+    element.style.setProperty('--ball-hue', String(hue));
     layer.append(element);
 
     balls.push({
       element,
       size,
+      hue,
       x: Math.random() * Math.max(1, window.innerWidth - size),
       y: -size - Math.random() * window.innerHeight * 0.45,
       velocityX: (Math.random() - 0.5) * 230,
@@ -1483,7 +1163,7 @@ function dropBalls(onComplete) {
 
     burst.className = 'ball-burst';
     burst.style.transform = `translate3d(${ball.x + ball.size / 2}px, ${ball.y + ball.size / 2}px, 0)`;
-    burst.style.setProperty('--burst-color', ballColor);
+    burst.style.setProperty('--burst-color', `hsl(${ball.hue} 88% 62% / 0.76)`);
     ring.className = 'ball-burst__ring';
     burst.append(ring);
 
@@ -1497,7 +1177,7 @@ function dropBalls(onComplete) {
       particle.style.setProperty('--particle-spin', `${120 + Math.random() * 300}deg`);
       particle.style.setProperty(
         '--particle-color',
-        burstColors[(index + Math.floor(Math.random() * burstColors.length)) % burstColors.length]
+        `hsl(${ball.hue} 90% ${62 + Math.random() * 18}% / 0.88)`
       );
       burst.append(particle);
     }
@@ -1620,55 +1300,14 @@ function dropBalls(onComplete) {
   requestAnimationFrame(animateBalls);
 }
 
-function showLightning(onComplete) {
-  const layer = document.createElement('div');
-  const lightningColor = '#111111';
-  const lightningFlash = 'rgba(17, 17, 17, 0.14)';
-
-  layer.className = 'lightning-layer';
-  layer.setAttribute('aria-hidden', 'true');
-  layer.style.setProperty('--lightning-color', lightningColor);
-  layer.style.setProperty('--lightning-flash', lightningFlash);
-
-  for (let index = 0; index < 5; index += 1) {
-    const bolt = document.createElement('span');
-
-    bolt.className = 'lightning-bolt';
-    bolt.style.left = `${8 + Math.random() * 84}%`;
-    bolt.style.setProperty('--bolt-width', `${14 + Math.random() * 15}px`);
-    bolt.style.setProperty('--bolt-height', `${42 + Math.random() * 38}vh`);
-    bolt.style.setProperty('--bolt-rotation', `${-12 + Math.random() * 24}deg`);
-    bolt.style.setProperty('--bolt-delay', `${index * 24}ms`);
-    layer.append(bolt);
-  }
-
-  document.body.append(layer);
-
-  window.setTimeout(() => {
-    layer.remove();
-    onComplete();
-  }, 760);
-}
-
-let isNavbarEffectRunning = false;
-setBallControlMode('balls');
+let isBallEffectRunning = false;
 
 ballButton.addEventListener('click', () => {
-  if (isNavbarEffectRunning) return;
+  if (isBallEffectRunning) return;
 
-  isNavbarEffectRunning = true;
-
-  if (ballButton.dataset.effectMode === 'lightning') {
-    showLightning(() => {
-      setBallControlMode('balls');
-      isNavbarEffectRunning = false;
-    });
-    return;
-  }
-
+  isBallEffectRunning = true;
   dropBalls(() => {
-    setBallControlMode('lightning');
-    isNavbarEffectRunning = false;
+    isBallEffectRunning = false;
   });
 });
 
@@ -2255,11 +1894,7 @@ function showWelcomeToast() {
 }
 
 async function playWelcomeCelebration() {
-  if (
-    !shouldPlayInitialIntroAnimation
-    || hasPlayedWelcomeCelebration
-    || gridPage.hidden
-  ) return;
+  if (hasPlayedWelcomeCelebration || gridPage.hidden) return;
 
   hasPlayedWelcomeCelebration = true;
   await waitForAnimationSequence(introToConfettiDelay);

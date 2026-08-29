@@ -86,39 +86,6 @@ body {
   transition: background-color 500ms ease;
 }
 
-/* The opaque WebGL canvas replaces this fallback while it is available. */
-html.has-site-shader body {
-  animation: none;
-}
-
-@keyframes site-background-drift {
-  0% {
-    background-position: 46% 44%;
-  }
-
-  50% {
-    background-position: 54% 51%;
-  }
-
-  100% {
-    background-position: 48% 57%;
-  }
-}
-
-.site-shader {
-  position: fixed;
-  z-index: 0;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.site-shader[hidden] {
-  display: none;
-}
-
 button {
   font: inherit;
 }
@@ -186,39 +153,41 @@ button {
 }
 
 .ball-control {
+  position: relative;
   display: grid;
   place-items: center;
   width: 56px;
   height: 56px;
   border: 0;
+  overflow: hidden;
 }
 
-.material-symbols-rounded.ball-control__orb {
-  width: auto;
-  height: auto;
-  background: transparent;
-  color: #111111;
-  font-size: 27px;
-  font-variation-settings:
-    "FILL" 1,
-    "wght" 400,
-    "GRAD" 0,
-    "opsz" 24;
+.ball-control__orb-video {
+  display: block;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  clip-path: circle(48% at 50% 50%);
+  background:
+    radial-gradient(circle at 34% 29%, rgba(255, 255, 255, 0.76), transparent 20%),
+    radial-gradient(circle at 79% 22%, rgba(255, 126, 205, 0.58), transparent 55%),
+    radial-gradient(circle at 24% 70%, rgba(255, 183, 157, 0.60), transparent 58%),
+    radial-gradient(circle at 62% 53%, rgba(94, 185, 255, 0.52), transparent 62%),
+    rgba(132, 108, 226, 0.34);
+  box-shadow: none;
+  object-fit: cover;
+  pointer-events: none;
   transition:
-    color 220ms ease,
-    font-size 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease,
     transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.ball-control.is-lightning .ball-control__orb {
-  font-size: 31px;
-}
-
-.ball-control:hover .ball-control__orb {
+.ball-control:hover .ball-control__orb-video {
   transform: translateY(-2px) scale(1.08);
 }
 
-.ball-control:active .ball-control__orb {
+.ball-control:active .ball-control__orb-video {
   transform: translateY(2px) scaleX(1.12) scaleY(0.88);
 }
 
@@ -237,9 +206,10 @@ button {
   left: 0;
   width: var(--ball-size);
   height: var(--ball-size);
+  overflow: hidden;
   border: 0;
   border-radius: 50%;
-  background: var(--ball-color);
+  background: hsl(var(--ball-hue) 84% 54% / 0.52);
   will-change: transform;
 }
 
@@ -307,29 +277,6 @@ button {
   }
 }
 
-.lightning-layer {
-  position: fixed;
-  z-index: 101;
-  inset: 0;
-  overflow: hidden;
-  background: var(--lightning-flash);
-  pointer-events: none;
-  animation: lightning-flash 620ms steps(1, end) both;
-}
-
-.lightning-bolt {
-  position: absolute;
-  top: -2vh;
-  width: var(--bolt-width);
-  height: var(--bolt-height);
-  background: var(--lightning-color);
-  clip-path: polygon(45% 0, 100% 0, 62% 42%, 96% 42%, 22% 100%, 41% 55%, 4% 55%);
-  opacity: 0;
-  transform: rotate(var(--bolt-rotation)) scaleY(0.2);
-  transform-origin: top;
-  animation: lightning-strike 620ms steps(1, end) var(--bolt-delay) both;
-}
-
 /* ---------- Landing celebration ---------- */
 
 .welcome-confetti {
@@ -361,7 +308,7 @@ button {
   box-shadow:
     inset 0 -1px 0 var(--glass-depth),
     0 10px 32px var(--glass-shadow);
-  color: var(--text);
+  color: #fff;
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, calc(100% + 48px)) scale(0.96);
@@ -397,7 +344,7 @@ button {
 .welcome-toast__message {
   grid-column: 1;
   margin: 0;
-  color: color-mix(in srgb, var(--text) 72%, transparent);
+  color: rgba(255, 255, 255, 0.72);
   font-size: 11px;
   line-height: 1.45;
 }
@@ -426,23 +373,6 @@ button {
 .welcome-toast__close:focus-visible {
   outline: 2px solid #747474;
   outline-offset: 2px;
-}
-
-@keyframes lightning-flash {
-  0%, 18%, 42%, 100% { background: transparent; }
-  8%, 32% { background: var(--lightning-flash); }
-}
-
-@keyframes lightning-strike {
-  0%, 18%, 42%, 100% {
-    opacity: 0;
-    transform: rotate(var(--bolt-rotation)) scaleY(0.2);
-  }
-
-  8%, 32% {
-    opacity: 1;
-    transform: rotate(var(--bolt-rotation)) scaleY(1);
-  }
 }
 
 .material-symbols-rounded {

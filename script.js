@@ -85,7 +85,7 @@ const PROJECT_CASE_STUDIES = [
       'Actions and workflow automation for agent-led tasks.',
       'Billing, usage limits, and referrals supporting product monetization.'
     ],
-    video: { title: 'Double AI product walkthrough', youtubeId: 'e-TcyLuBLJA' },
+    video: { title: 'Double AI product walkthrough', youtubeId: 'vSX0Tjq4voU' },
     gallery: Array.from({ length: 10 }, (_, index) => ({
       src: `assets/images/double-ai/Double ai ${index + 1}.webp`,
       alt: `Double AI product frame ${index + 1}`
@@ -227,6 +227,23 @@ function smootherStep(progress) {
     * (clampedProgress * (clampedProgress * 6 - 15) + 10);
 }
 
+function getRenderedText(element, styles) {
+  const text = element.textContent.trim();
+
+  switch (styles.textTransform) {
+    case 'uppercase':
+      return text.toLocaleUpperCase(document.documentElement.lang || undefined);
+    case 'lowercase':
+      return text.toLocaleLowerCase(document.documentElement.lang || undefined);
+    case 'capitalize':
+      return text.replace(/(^|\s)(\S)/g, (match) => (
+        match.toLocaleUpperCase(document.documentElement.lang || undefined)
+      ));
+    default:
+      return text;
+  }
+}
+
 function createIntroParticleTargets() {
   const titleStyles = getComputedStyle(introTitle);
   const titleBounds = introTitle.getBoundingClientRect();
@@ -234,7 +251,9 @@ function createIntroParticleTargets() {
   const sampleCanvas = document.createElement('canvas');
   const sampleContext = sampleCanvas.getContext('2d', { willReadFrequently: true });
   const samplePadding = 6;
-  const titleText = introTitle.textContent.trim();
+  // Canvas text does not inherit CSS text-transform. Sample the exact casing
+  // shown by the heading so the particle silhouette and final text match.
+  const titleText = getRenderedText(introTitle, titleStyles);
   const lineHeight = Number.parseFloat(titleStyles.lineHeight);
 
   sampleContext.font = `${titleStyles.fontStyle} ${titleStyles.fontWeight} ${titleStyles.fontSize} ${titleStyles.fontFamily}`;
@@ -380,9 +399,13 @@ function playIntroParticleMerge() {
         + (particle.targetY - particle.startY) * easedProgress
         + Math.cos(elapsed * 0.005 + particle.phase) * particle.drift * remainingEnergy;
 
+      const settledRadius = 1;
+      const radius = particle.radius
+        + (settledRadius - particle.radius) * blendProgress;
+
       canvasContext.globalAlpha = 0.18 + easedProgress * 0.82;
       canvasContext.beginPath();
-      canvasContext.arc(x, y, particle.radius, 0, Math.PI * 2);
+      canvasContext.arc(x, y, radius, 0, Math.PI * 2);
       canvasContext.fill();
     });
 

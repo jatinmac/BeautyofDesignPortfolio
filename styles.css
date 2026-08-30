@@ -43,16 +43,23 @@
     #2e17ff 92%,
     #1103ff 100%
   );
+  --action-background: var(--site-background);
+  --action-border: #4829ff;
 
   /* Shared dimensions and alignment */
   --control-size: 58px;
   --corner-radius: 8px;
+  --case-study-background: #ffffff;
+  --card-gap: 4px;
+  --section-gap: 48px;
   --navigation-width: 734px;
   --navigation-alignment: max(24px, calc((100vw - var(--navigation-width)) / 2));
 
-  /* Shared card typography used across Work, Builds, About, and More. */
-  --card-text-size: 12px;
-  --card-meta-size: 9px;
+  /* Four semantic type sizes shared by every home and project view. */
+  --type-size-display: clamp(40px, 6vw, 64px);
+  --type-size-heading: clamp(26px, 3vw, 34px);
+  --type-size-body: 16px;
+  --type-size-label: 12px;
 }
 
 /* ---------- Base styles ---------- */
@@ -78,11 +85,12 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   background-size: 100% 100%;
-  font-family: "Inter", sans-serif;
+  font-family: "Nanum Gothic Coding", monospace;
   font-optical-sizing: auto;
-  font-size: 12px;
+  font-size: var(--type-size-body);
   font-style: normal;
   font-weight: 400;
+  text-transform: uppercase;
   transition: background-color 500ms ease;
 }
 
@@ -302,13 +310,11 @@ button {
   overflow: hidden;
 
   border-radius: var(--corner-radius);
-  background:
-    linear-gradient(135deg, transparent 72%, var(--glass-depth)),
-    var(--glass-card);
+  background: #ffffff;
   box-shadow:
     inset 0 -1px 0 var(--glass-depth),
     0 10px 32px var(--glass-shadow);
-  color: #fff;
+  color: var(--text);
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, calc(100% + 48px)) scale(0.96);
@@ -333,8 +339,8 @@ button {
 
 .welcome-toast__title {
   align-self: end;
-  font-family: "Nunito", sans-serif;
-  font-size: var(--card-text-size);
+  font-family: "Mersad", sans-serif;
+  font-size: var(--type-size-label);
   font-optical-sizing: auto;
   font-weight: 500;
   line-height: 1.25;
@@ -344,9 +350,9 @@ button {
 .welcome-toast__message {
   grid-column: 1;
   margin: 0;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 11px;
-  line-height: 1.45;
+  color: rgba(48, 48, 47, 0.72);
+  font-size: var(--type-size-body);
+  line-height: 1.55;
 }
 
 .welcome-toast__close {
@@ -417,7 +423,6 @@ button {
   inset: 14px 18px;
   display: flex;
   gap: 4px;
-  align-items: center;
   justify-content: center;
   pointer-events: none;
 }
@@ -475,9 +480,9 @@ button {
   background: #d5d5d5;
   box-shadow: none;
   color: transparent;
-  font-family: "Inter", sans-serif;
+  font-family: "Nanum Gothic Coding", monospace;
   font-optical-sizing: auto;
-  font-size: 12px;
+  font-size: var(--type-size-label);
   font-weight: 400;
   letter-spacing: 0.02em;
   line-height: 1;
@@ -535,7 +540,7 @@ button {
   background: var(--surface);
   box-shadow: 0 2px 1px var(--shadow);
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--type-size-label);
   text-decoration: none;
   cursor: pointer;
   transition: transform 220ms ease, background-color 220ms ease;
@@ -551,7 +556,7 @@ button {
 .collections {
   display: flex;
   align-items: flex-start;
-  gap: 56px;
+  gap: var(--section-gap);
   width: 100%;
   height: calc(100vh - 194px);
   margin-top: 48px;
@@ -593,7 +598,7 @@ button {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(4, 1fr);
-  gap: 3px;
+  gap: var(--card-gap);
   width: 580px;
   height: 544px;
   scroll-snap-align: start;
@@ -608,6 +613,7 @@ button {
   background-clip: padding-box;
   box-shadow: none;
   cursor: pointer;
+  font-size: var(--type-size-label);
   transform: perspective(700px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   transition: transform 180ms ease, background 220ms ease, border-color 220ms ease;
   -webkit-backdrop-filter: blur(26px) saturate(180%) contrast(105%);
@@ -637,7 +643,7 @@ button {
 }
 
 .card:hover {
-  background: rgba(255, 255, 255, 0.9);
+  background: #ffffff;
 }
 
 /* Project cards lift into isolated transition layers before the detail reveal. */
@@ -715,8 +721,8 @@ body.is-card-transitioning .detail-page {
   margin: 0;
   overflow: hidden;
   color: var(--text);
-  font-family: "Nunito", sans-serif;
-  font-size: var(--card-text-size);
+  font-family: "Mersad", sans-serif;
+  font-size: var(--type-size-label);
   font-optical-sizing: auto;
   font-style: normal;
   font-weight: 500;
@@ -741,8 +747,9 @@ body.is-card-transitioning .detail-page {
   border: 1px solid var(--tag-edge);
   border-radius: 4px;
   color: var(--text);
-  font-size: var(--card-meta-size);
-  line-height: 1;
+  font-size: var(--type-size-label);
+  line-height: 1.2;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -751,10 +758,6 @@ body.is-card-transitioning .detail-page {
   grid-template-rows: minmax(0, 1fr) auto;
   gap: 4px;
   padding: 8px;
-}
-
-.project-card--image-only .project-card__title {
-  font-size: 10px;
 }
 
 .project-card--image-only .project-card__tags {
@@ -774,7 +777,7 @@ body.is-card-transitioning .detail-page {
 
 .about-card__eyebrow {
   color: color-mix(in srgb, var(--text) 65%, transparent);
-  font-size: var(--card-text-size);
+  font-size: var(--type-size-label);
   font-weight: 400;
   line-height: 1.25;
   text-transform: uppercase;
@@ -782,7 +785,7 @@ body.is-card-transitioning .detail-page {
 
 .about-card__lead {
   margin: 0;
-  font-size: var(--card-text-size);
+  font-size: var(--type-size-label);
   font-weight: 400;
   line-height: 1.55;
 }
@@ -802,7 +805,7 @@ body.is-card-transitioning .detail-page {
 
 .about-card small {
   color: color-mix(in srgb, var(--text) 60%, transparent);
-  font-size: var(--card-meta-size);
+  font-size: var(--type-size-label);
   font-weight: 400;
   line-height: 1.35;
 }
@@ -813,7 +816,7 @@ body.is-card-transitioning .detail-page {
   justify-content: flex-start;
   gap: 12px;
   margin-top: auto;
-  font-size: var(--card-meta-size);
+  font-size: var(--type-size-label);
   font-weight: 400;
   text-transform: uppercase;
 }
@@ -837,14 +840,14 @@ body.is-card-transitioning .detail-page {
 }
 
 .about-card__skill-groups h2 {
-  font-size: var(--card-text-size);
+  font-size: var(--type-size-label);
   font-weight: 400;
   line-height: 1.25;
   text-transform: uppercase;
 }
 
 .about-card__skill-groups p {
-  font-size: var(--card-meta-size);
+  font-size: var(--type-size-label);
   font-weight: 400;
   line-height: 1.55;
 }
@@ -878,7 +881,7 @@ body.is-card-transitioning .detail-page {
 .about-card__collage figcaption {
   overflow: hidden;
   color: var(--text);
-  font-size: var(--card-meta-size);
+  font-size: var(--type-size-label);
   font-weight: 400;
   line-height: 1.2;
   text-overflow: ellipsis;
@@ -889,9 +892,64 @@ body.is-card-transitioning .detail-page {
 .about-card--profile { grid-column: 1; grid-row: 1; }
 .about-card--education { grid-column: 1; grid-row: 2; }
 .about-card--experience { grid-column: 2; grid-row: 1 / 3; }
-.about-card--skills-primary { grid-column: 3; grid-row: 1; }
-.about-card--skills-secondary { grid-column: 3; grid-row: 2; }
-.about-card--interests { grid-column: 4 / 6; grid-row: 1 / 3; }
+.about-card--skills-primary { grid-column: 4; grid-row: 1; }
+.about-card--skills-secondary { grid-column: 4; grid-row: 2; }
+.about-card--interests { grid-column: 5 / 7; grid-row: 1 / 3; }
+
+.about-outcomes {
+  align-self: center;
+  grid-column: 3;
+  grid-row: 1 / 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: var(--card-gap);
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: var(--type-size-label);
+  line-height: 1.55;
+  list-style: none;
+}
+
+.about-outcomes li {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 7px;
+  min-width: 0;
+  padding: 4px;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--corner-radius);
+  background: #ffffff;
+  color: var(--intro-text);
+}
+
+.about-outcomes strong {
+  color: var(--intro-text-strong);
+  font-weight: 700;
+}
+
+.about-outcomes li > span:last-child {
+  align-self: center;
+}
+
+.about-outcomes__visual {
+  display: grid;
+  width: 100%;
+  border-radius: 5px;
+  background: #ffffff;
+  place-items: center;
+}
+
+.about-outcomes__visual img {
+  display: block;
+  width: auto;
+  max-width: 78%;
+  height: auto;
+  max-height: 64%;
+  object-fit: contain;
+}
 
 /* ---------- Intro panel ---------- */
 
@@ -928,8 +986,11 @@ body.is-card-transitioning .detail-page {
   z-index: 2;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   padding: 64px 66px;
+  text-align: left;
 }
 
 .intro-card h1,
@@ -939,8 +1000,9 @@ body.is-card-transitioning .detail-page {
 }
 
 .intro-card h1 {
+  align-self: flex-start;
   font-family: "Mersad", sans-serif;
-  font-size: 48px;
+  font-size: var(--type-size-display);
   font-optical-sizing: auto;
   font-weight: 300;
   letter-spacing: -0.035em;
@@ -951,66 +1013,13 @@ body.is-card-transitioning .detail-page {
   max-width: 470px;
   margin-top: 28px !important;
   color: var(--intro-text-muted);
-  font-size: 19px;
-  line-height: 1.5;
+  font-size: var(--type-size-body);
+  line-height: 1.6;
 }
 
 .intro-card__lead strong {
   color: var(--intro-text-strong);
   font-weight: 650;
-}
-
-.intro-card__highlights {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  left: 14px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  max-width: none;
-  padding: 0;
-  font-size: 10px;
-  line-height: 1.55;
-  list-style: none;
-}
-
-.intro-card__highlights li {
-  display: grid;
-  grid-template-rows: 76px minmax(0, 1fr);
-  gap: 7px;
-  min-width: 0;
-  min-height: 171px;
-  padding: 4px;
-  overflow: hidden;
-  border: 1px solid var(--intro-card-edge);
-  border-radius: var(--corner-radius);
-  background: transparent;
-  box-shadow: none;
-  color: var(--intro-text);
-  backdrop-filter: none;
-}
-
-.intro-card__highlights strong {
-  color: var(--intro-text-strong);
-  font-weight: 700;
-}
-
-.intro-card__highlight-visual {
-  display: grid;
-  width: 100%;
-  border-radius: 5px;
-  background: #ffffff;
-  place-items: center;
-}
-
-.intro-card__highlight-visual img {
-  display: block;
-  width: auto;
-  max-width: 78%;
-  height: auto;
-  max-height: 64%;
-  object-fit: contain;
 }
 
 /* ---------- Grid 1: stepped layout ---------- */
@@ -1118,7 +1127,7 @@ body.is-card-transitioning .detail-page {
 }
 
 .prototype-toggle__title {
-  font-size: 12px;
+  font-size: var(--type-size-label);
   text-transform: uppercase;
 }
 
@@ -1127,8 +1136,8 @@ body.is-card-transitioning .detail-page {
   padding: 4px 6px;
   border: 1px solid var(--tag-edge);
   border-radius: 4px;
-  font-size: 9px;
-  line-height: 1;
+  font-size: var(--type-size-label);
+  line-height: 1.2;
   text-transform: uppercase;
 }
 
@@ -1168,10 +1177,10 @@ body.is-card-transitioning .detail-page {
 /* ---------- Grid 3: complete About section ---------- */
 
 .card-grid--four-cards {
-  flex-basis: 1450px;
-  width: 1450px;
+  flex-basis: 1740px;
+  width: 1740px;
   height: 561px;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   grid-template-rows: repeat(2, 1fr);
 }
 
@@ -1222,12 +1231,12 @@ body.is-card-transitioning .detail-page {
 }
 
 .more-card__eyebrow {
-  font-size: var(--card-text-size);
+  font-size: var(--type-size-label);
   line-height: 1.25;
 }
 
 .more-card__count {
-  font-size: var(--card-meta-size);
+  font-size: var(--type-size-label);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1245,7 +1254,7 @@ body.is-card-transitioning .detail-page {
   min-height: 70px;
   padding: 13px 12px 13px 40px;
   border-top: 1px solid var(--tag-edge);
-  font-size: var(--card-text-size);
+  font-size: var(--type-size-label);
   font-weight: 400;
   line-height: 1.45;
   counter-increment: more-list;
@@ -1256,13 +1265,13 @@ body.is-card-transitioning .detail-page {
   top: 14px;
   left: 0;
   color: color-mix(in srgb, var(--text) 45%, transparent);
-  font-size: var(--card-meta-size);
+  font-size: var(--type-size-label);
   content: counter(more-list, decimal-leading-zero);
 }
 
 .more-card__list small {
   color: color-mix(in srgb, var(--text) 60%, transparent);
-  font-size: var(--card-meta-size);
+  font-size: var(--type-size-label);
   font-weight: 400;
   line-height: 1.35;
 }
@@ -1274,7 +1283,7 @@ body.is-card-transitioning .detail-page {
 
 .more-card__contact-intro {
   margin: 16px 0 24px;
-  font-size: var(--card-text-size);
+  font-size: var(--type-size-label);
   font-weight: 400;
   line-height: 1.55;
 }
@@ -1290,7 +1299,7 @@ body.is-card-transitioning .detail-page {
   padding: 14px 0;
   border-top: 1px solid var(--tag-edge);
   color: var(--text);
-  font-size: var(--card-text-size);
+  font-size: var(--type-size-label);
   font-weight: 400;
   text-decoration: none;
   transition: padding-left 180ms ease, color 180ms ease;
@@ -1313,7 +1322,7 @@ body.is-card-transitioning .detail-page {
   gap: 3px;
   overflow: hidden;
   color: color-mix(in srgb, var(--text) 60%, transparent);
-  font-size: var(--card-meta-size);
+  font-size: var(--type-size-label);
   font-weight: 400;
   line-height: 1.35;
   text-overflow: ellipsis;
@@ -1383,9 +1392,7 @@ body.is-card-transitioning .detail-page {
   overflow: hidden;
   border: 1px solid var(--glass-edge);
   border-radius: var(--corner-radius);
-  background:
-    linear-gradient(135deg, transparent 76%, var(--glass-depth)),
-    var(--glass-card);
+  background: var(--case-study-background);
   background-clip: padding-box;
   box-shadow: none;
   color: var(--text);
@@ -1396,6 +1403,7 @@ body.is-card-transitioning .detail-page {
 
 .case-study {
   width: 100%;
+  font-size: var(--type-size-body);
 }
 
 .case-study__hero,
@@ -1415,7 +1423,7 @@ body.is-card-transitioning .detail-page {
 .case-study__eyebrow,
 .case-study__item-label {
   display: block;
-  font-size: 9px;
+  font-size: var(--type-size-label);
   letter-spacing: 0.08em;
   line-height: 1.4;
   text-transform: uppercase;
@@ -1435,7 +1443,7 @@ body.is-card-transitioning .detail-page {
 .case-study h1,
 .case-study h2,
 .case-study h3 {
-  font-family: "Nunito", sans-serif;
+  font-family: "Mersad", sans-serif;
   font-optical-sizing: auto;
   font-style: normal;
 }
@@ -1443,7 +1451,7 @@ body.is-card-transitioning .detail-page {
 .case-study h1 {
   max-width: 900px;
   margin-top: 18px;
-  font-size: clamp(38px, 6.2vw, 72px);
+  font-size: var(--type-size-display);
   font-weight: 300;
   letter-spacing: -0.055em;
   line-height: 0.98;
@@ -1453,7 +1461,7 @@ body.is-card-transitioning .detail-page {
 .case-study h2 {
   max-width: 760px;
   margin-top: 10px;
-  font-size: clamp(24px, 3.5vw, 38px);
+  font-size: var(--type-size-heading);
   font-weight: 300;
   letter-spacing: -0.045em;
   line-height: 1.08;
@@ -1461,19 +1469,19 @@ body.is-card-transitioning .detail-page {
 }
 
 .case-study h3 {
-  font-size: 12px;
+  font-size: var(--type-size-body);
   font-weight: 500;
   line-height: 1.4;
 }
 
 .case-study p {
-  line-height: 1.65;
+  font-size: var(--type-size-body);
+  line-height: 1.7;
 }
 
 .case-study__subtitle {
   max-width: 740px;
   margin-top: 22px !important;
-  font-size: 16px;
   opacity: 0.68;
 }
 
@@ -1490,9 +1498,10 @@ body.is-card-transitioning .detail-page {
   padding: 6px 8px;
   border: 1px solid var(--tag-edge);
   border-radius: 999px;
-  font-size: 9px;
-  line-height: 1;
+  font-size: var(--type-size-label);
+  line-height: 1.2;
   opacity: 0.72;
+  text-transform: uppercase;
 }
 
 .case-study__hero-media {
@@ -1522,7 +1531,6 @@ body.is-card-transitioning .detail-page {
 .case-study__hook,
 .case-study__lead {
   max-width: 800px;
-  font-size: 16px;
   line-height: 1.65 !important;
 }
 
@@ -1571,22 +1579,25 @@ body.is-card-transitioning .detail-page {
   min-height: 48px;
   margin-top: 36px;
   padding: 0 16px;
-  border: 1px solid #ff0051;
+  border: 1px solid var(--action-border);
   border-radius: var(--corner-radius);
-  background: #ff0051;
+  background: var(--action-background);
+  background-position: center 100%;
+  background-size: 100% 400%;
   color: #ffffff;
   text-decoration: none;
   box-shadow: 0 2px 1px var(--shadow);
-  transition: transform 180ms ease, background-color 180ms ease;
+  transition: transform 180ms ease, background-position 220ms ease, filter 180ms ease;
 }
 
 .case-study__action:hover {
   transform: translateY(-2px);
-  background: #e60049;
+  background-position: center 92%;
+  filter: brightness(1.08);
 }
 
 .case-study__action:focus-visible {
-  outline: 2px solid #ff0051;
+  outline: 2px solid var(--action-border);
   outline-offset: 3px;
 }
 
@@ -1723,7 +1734,7 @@ body.is-card-transitioning .detail-page {
 }
 
 .case-study__number {
-  font-size: 9px;
+  font-size: var(--type-size-label);
   line-height: 1.65;
   opacity: 0.5;
 }
@@ -1739,7 +1750,7 @@ body.is-card-transitioning .detail-page {
 }
 
 .case-study__section--difficulty {
-  background: color-mix(in srgb, var(--glass-card-hover) 52%, transparent);
+  background: var(--case-study-background);
 }
 
 .case-study__missing {
@@ -1750,7 +1761,7 @@ body.is-card-transitioning .detail-page {
 }
 
 .case-study__missing h1 {
-  font-size: clamp(28px, 4vw, 48px);
+  font-size: var(--type-size-display);
   font-weight: 300;
   text-align: center;
 }
@@ -1762,8 +1773,7 @@ body.is-card-transitioning .detail-page {
     --control-size: 48px;
     --navigation-alignment: 16px;
     --navigation-width: 100%;
-    --card-text-size: 11px;
-    --card-meta-size: 8px;
+    --section-gap: 32px;
   }
 
   .page-shell {
@@ -1802,7 +1812,6 @@ body.is-card-transitioning .detail-page {
 
   .navigation-end {
     border-radius: var(--corner-radius) 24px 24px var(--corner-radius);
-    font-size: 11px;
   }
 
   .navigation-lines {
@@ -1818,7 +1827,7 @@ body.is-card-transitioning .detail-page {
   .collections {
     display: flex;
     flex-direction: column;
-    gap: 40px;
+    gap: var(--section-gap);
     width: 100%;
     height: auto;
     margin: 32px 0 0;
@@ -1831,7 +1840,7 @@ body.is-card-transitioning .detail-page {
 
   .card-grid {
     flex: none;
-    gap: 4px;
+    gap: var(--card-gap);
     width: 100%;
     max-width: 100%;
     height: auto;
@@ -1854,30 +1863,30 @@ body.is-card-transitioning .detail-page {
     padding: 20px;
   }
 
-  .intro-card h1 {
-    font-size: clamp(38px, 12vw, 46px);
-  }
-
   .intro-card__lead {
     max-width: 30ch;
     margin-top: 18px !important;
-    font-size: 15px;
-    line-height: 1.45;
+    line-height: 1.55;
   }
 
-  .intro-card__highlights {
-    position: static;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 4px;
-    margin-top: 32px !important;
-    font-size: 8px;
-    line-height: 1.45;
+  .about-outcomes {
+    align-self: auto;
+    grid-column: 1;
+    grid-row: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-rows: auto;
+    gap: var(--card-gap);
+    height: auto;
+    line-height: 1.55;
   }
 
-  .intro-card__highlights li {
-    grid-template-rows: 58px minmax(0, 1fr);
-    min-height: 142px;
-    padding: 4px;
+  .about-outcomes li {
+    grid-template-columns: 76px minmax(0, 1fr);
+    grid-template-rows: minmax(96px, auto);
+    gap: 12px;
+    min-height: 104px;
+    padding: 8px;
   }
 
   /* Work keeps featured projects prominent and shrinks supporting cards. */
@@ -2004,20 +2013,6 @@ body.is-card-transitioning .detail-page {
   .case-study__hero,
   .case-study__section {
     padding: 28px 20px;
-  }
-
-  .case-study h1 {
-    font-size: clamp(34px, 11vw, 52px);
-  }
-
-  .case-study h2 {
-    font-size: 26px;
-  }
-
-  .case-study__subtitle,
-  .case-study__hook,
-  .case-study__lead {
-    font-size: 14px;
   }
 
   .case-study__hero-media {

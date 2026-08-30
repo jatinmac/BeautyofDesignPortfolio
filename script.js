@@ -708,15 +708,7 @@ function renderProjectVideo(project) {
   `;
 }
 
-function renderCaseStudy(project) {
-  const architectureSection = project.architecture?.length ? `
-    <section class="case-study__section" aria-labelledby="project-architecture-title">
-      <span class="case-study__eyebrow">Product architecture</span>
-      <h2 id="project-architecture-title">Functions of the client/UI layer.</h2>
-      ${renderNumberedList(project.architecture)}
-    </section>
-  ` : '';
-
+function renderDoubleAICaseStudy(project) {
   const externalAction = project.liveUrl ? `
     <a class="case-study__action" href="${escapeHtml(project.liveUrl)}" target="_blank" rel="noopener noreferrer">
       <span>${escapeHtml(project.linkText || 'View live product')}</span>
@@ -724,7 +716,7 @@ function renderCaseStudy(project) {
   ` : '';
 
   return `
-    <div class="case-study">
+    <div class="case-study case-study--segmented case-study--work-project case-study--double-ai">
       <header class="case-study__hero">
         <div class="case-study__intro">
           <span class="case-study__meta">Case file ${escapeHtml(project.number)} · ${escapeHtml(project.role)} · ${escapeHtml(project.year)}</span>
@@ -733,47 +725,73 @@ function renderCaseStudy(project) {
           ${renderPills(project.tags, project.underDevelopment)}
         </div>
 
+        <nav class="case-study-section-nav" aria-label="${escapeHtml(project.title)} case study sections">
+          <button type="button" data-case-target="project-challenge-title"><span>01</span>Challenge</button>
+          <button type="button" data-case-target="project-process-title"><span>02</span>Process</button>
+          <button type="button" data-case-target="project-difficulty-title"><span>03</span>Pivot</button>
+          <button type="button" data-case-target="project-impact-title"><span>04</span>Impact</button>
+          <button type="button" data-case-target="project-architecture-title"><span>05</span>Architecture</button>
+          <button type="button" data-case-target="project-work-title"><span>06</span>Key work</button>
+        </nav>
+
         <figure class="case-study__hero-media">
           <img src="${escapeHtml(project.image)}" alt="${escapeHtml(project.title)}" width="1440" height="1024" decoding="async" fetchpriority="high" />
         </figure>
 
-        <p class="case-study__hook">${escapeHtml(project.hook)}</p>
-        ${renderLabelledGrid(project.context, 'case-study__context')}
+        <article class="work-case-proposition">
+          <span class="case-study__item-label">Product proposition</span>
+          <p>${escapeHtml(project.hook)}</p>
+        </article>
+
+        <span class="case-study__eyebrow work-case-context-label">At a glance</span>
+        ${renderLabelledGrid(project.context, 'case-study__context work-case-context')}
         ${externalAction}
       </header>
 
       ${renderProjectGallery(project)}
       ${renderProjectVideo(project)}
 
-      <section class="case-study__section" aria-labelledby="project-challenge-title">
+      <section class="case-study__section segmented-section segmented-section--challenge double-ai-section" data-section-number="01" aria-labelledby="project-challenge-title">
         <span class="case-study__eyebrow">Challenge</span>
-        <h2 id="project-challenge-title">What had to become clear.</h2>
-        <p class="case-study__lead">${escapeHtml(project.challenge)}</p>
-        <p class="case-study__secondary">${escapeHtml(project.details)}</p>
-        ${renderLabelledGrid(project.problems, 'case-study__problems')}
+        <h2 id="project-challenge-title">From static identity to an active AI Twin.</h2>
+        <div class="work-case-challenge-grid">
+          <article>
+            <span class="case-study__item-label">The platform</span>
+            <p>${escapeHtml(project.challenge)}</p>
+          </article>
+          <article>
+            <span class="case-study__item-label">Design ownership</span>
+            <p>${escapeHtml(project.details)}</p>
+          </article>
+        </div>
+        ${renderLabelledGrid(project.problems, 'case-study__problems work-case-problems')}
       </section>
 
-      <section class="case-study__section" aria-labelledby="project-process-title">
+      <section class="case-study__section segmented-section segmented-section--process double-ai-section" data-section-number="02" aria-labelledby="project-process-title">
         <span class="case-study__eyebrow">Process</span>
-        <h2 id="project-process-title">Decisions before decoration.</h2>
+        <h2 id="project-process-title">Four connected design decisions.</h2>
         ${renderProcess(project.process)}
       </section>
 
-      <section class="case-study__section case-study__section--difficulty" aria-labelledby="project-difficulty-title">
-        <span class="case-study__eyebrow">Difficulty</span>
-        <h2 id="project-difficulty-title">The difficult part was what required the most care.</h2>
+      <section class="case-study__section segmented-section segmented-section--difficulty double-ai-section" data-section-number="03" aria-labelledby="project-difficulty-title">
+        <span class="case-study__eyebrow">Pivotal difficulty</span>
+        <h2 id="project-difficulty-title">The product’s mental model had to change.</h2>
         <p class="case-study__lead">${escapeHtml(project.difficulty)}</p>
       </section>
 
-      <section class="case-study__section" aria-labelledby="project-impact-title">
+      <section class="case-study__section segmented-section segmented-section--impact double-ai-section" data-section-number="04" aria-labelledby="project-impact-title">
         <span class="case-study__eyebrow">Impact</span>
-        <h2 id="project-impact-title">Evidence.</h2>
-        ${renderLabelledGrid(project.impact, 'case-study__impact')}
+        <h2 id="project-impact-title">Reach and product coherence.</h2>
+        ${renderLabelledGrid(project.impact, 'case-study__impact work-case-impact')}
       </section>
 
-      ${architectureSection}
+      <section class="case-study__section segmented-section segmented-section--architecture double-ai-section" data-section-number="05" aria-labelledby="project-architecture-title">
+        <span class="case-study__eyebrow">Product architecture</span>
+        <h2 id="project-architecture-title">Six connected surfaces behind the AI Twin.</h2>
+        ${renderNumberedList(project.architecture)}
+      </section>
 
-      <section class="case-study__section" aria-labelledby="project-work-title">
+      <section class="case-study__section segmented-section segmented-section--work double-ai-section" data-section-number="06" aria-labelledby="project-work-title">
         <span class="case-study__eyebrow">Key work</span>
         <h2 id="project-work-title">What I designed and delivered.</h2>
         ${renderNumberedList(project.work)}
@@ -782,16 +800,430 @@ function renderCaseStudy(project) {
   `;
 }
 
+function renderCaseStudy(project) {
+  if (project.id === 'double-ai') return renderDoubleAICaseStudy(project);
+
+  const hasArchitecture = Boolean(project.architecture?.length);
+  const architectureSection = hasArchitecture ? `
+    <section class="case-study__section segmented-section segmented-section--architecture" data-section-number="05" aria-labelledby="project-architecture-title">
+      <span class="case-study__eyebrow">Product architecture</span>
+      <h2 id="project-architecture-title">Functions of the client/UI layer.</h2>
+      ${renderNumberedList(project.architecture)}
+    </section>
+  ` : '';
+
+  const architectureNavigation = hasArchitecture ? `
+    <button type="button" data-case-target="project-architecture-title"><span>05</span>Architecture</button>
+  ` : '';
+
+  const workSectionNumber = hasArchitecture ? '06' : '05';
+
+  const externalAction = project.liveUrl ? `
+    <a class="case-study__action" href="${escapeHtml(project.liveUrl)}" target="_blank" rel="noopener noreferrer">
+      <span>${escapeHtml(project.linkText || 'View live product')}</span>
+    </a>
+  ` : '';
+
+  return `
+    <div class="case-study case-study--segmented case-study--work-project">
+      <header class="case-study__hero">
+        <div class="case-study__intro">
+          <span class="case-study__meta">Case file ${escapeHtml(project.number)} · ${escapeHtml(project.role)} · ${escapeHtml(project.year)}</span>
+          <h1>${escapeHtml(project.title)}</h1>
+          <p class="case-study__subtitle">${escapeHtml(project.subtitle)}</p>
+          ${renderPills(project.tags, project.underDevelopment)}
+        </div>
+
+        <nav class="case-study-section-nav" aria-label="${escapeHtml(project.title)} case study sections">
+          <button type="button" data-case-target="project-challenge-title"><span>01</span>Challenge</button>
+          <button type="button" data-case-target="project-process-title"><span>02</span>Process</button>
+          <button type="button" data-case-target="project-difficulty-title"><span>03</span>Difficulty</button>
+          <button type="button" data-case-target="project-impact-title"><span>04</span>Impact</button>
+          ${architectureNavigation}
+          <button type="button" data-case-target="project-work-title"><span>${workSectionNumber}</span>Key work</button>
+        </nav>
+
+        <figure class="case-study__hero-media">
+          <img src="${escapeHtml(project.image)}" alt="${escapeHtml(project.title)}" width="1440" height="1024" decoding="async" fetchpriority="high" />
+        </figure>
+
+        <article class="work-case-proposition">
+          <span class="case-study__item-label">Product proposition</span>
+          <p>${escapeHtml(project.hook)}</p>
+        </article>
+
+        <span class="case-study__eyebrow work-case-context-label">At a glance</span>
+        ${renderLabelledGrid(project.context, 'case-study__context work-case-context')}
+        ${externalAction}
+      </header>
+
+      ${renderProjectGallery(project)}
+      ${renderProjectVideo(project)}
+
+      <section class="case-study__section segmented-section segmented-section--challenge" data-section-number="01" aria-labelledby="project-challenge-title">
+        <span class="case-study__eyebrow">Challenge</span>
+        <h2 id="project-challenge-title">What had to become clear.</h2>
+        <div class="work-case-challenge-grid">
+          <article>
+            <span class="case-study__item-label">The project</span>
+            <p>${escapeHtml(project.challenge)}</p>
+          </article>
+          <article>
+            <span class="case-study__item-label">Design contribution</span>
+            <p>${escapeHtml(project.details)}</p>
+          </article>
+        </div>
+        ${renderLabelledGrid(project.problems, 'case-study__problems work-case-problems')}
+      </section>
+
+      <section class="case-study__section segmented-section segmented-section--process" data-section-number="02" aria-labelledby="project-process-title">
+        <span class="case-study__eyebrow">Process</span>
+        <h2 id="project-process-title">Decisions before decoration.</h2>
+        ${renderProcess(project.process)}
+      </section>
+
+      <section class="case-study__section case-study__section--difficulty segmented-section segmented-section--difficulty" data-section-number="03" aria-labelledby="project-difficulty-title">
+        <span class="case-study__eyebrow">Difficulty</span>
+        <h2 id="project-difficulty-title">The difficult part was what required the most care.</h2>
+        <p class="case-study__lead">${escapeHtml(project.difficulty)}</p>
+      </section>
+
+      <section class="case-study__section segmented-section segmented-section--impact" data-section-number="04" aria-labelledby="project-impact-title">
+        <span class="case-study__eyebrow">Impact</span>
+        <h2 id="project-impact-title">Evidence.</h2>
+        ${renderLabelledGrid(project.impact, 'case-study__impact work-case-impact')}
+      </section>
+
+      ${architectureSection}
+
+      <section class="case-study__section segmented-section segmented-section--work" data-section-number="${workSectionNumber}" aria-labelledby="project-work-title">
+        <span class="case-study__eyebrow">Key work</span>
+        <h2 id="project-work-title">What I designed and delivered.</h2>
+        ${renderNumberedList(project.work)}
+      </section>
+    </div>
+  `;
+}
+
+function renderEmergentCaseStudy() {
+  return `
+    <div class="case-study case-study--segmented case-study--emergent">
+      <header class="case-study__hero">
+        <div class="case-study__intro">
+          <span class="case-study__meta">Product design case study</span>
+          <h1>Emergent: Fixing the Credit Economy</h1>
+          <p class="case-study__subtitle">Making AI-agent spend predictable, transparent, and fair without slowing down the no-code building experience.</p>
+          ${renderPills(['AI product design', 'Billing transparency', 'Trust', 'No-code'], false)}
+        </div>
+
+        <nav class="case-study-section-nav" aria-label="Emergent case study sections">
+          <button type="button" data-case-target="emergent-users-title"><span>01</span>Users</button>
+          <button type="button" data-case-target="emergent-problem-title"><span>02</span>Problem</button>
+          <button type="button" data-case-target="emergent-business-title"><span>03</span>Impact</button>
+          <button type="button" data-case-target="emergent-alternatives-title"><span>04</span>Alternatives</button>
+          <button type="button" data-case-target="emergent-solution-title"><span>05</span>Solution</button>
+          <button type="button" data-case-target="emergent-metrics-title"><span>06</span>Metrics</button>
+          <button type="button" data-case-target="emergent-scope-title"><span>07</span>Scope</button>
+          <button type="button" data-case-target="emergent-validation-title"><span>08</span>Validation</button>
+        </nav>
+
+        <figure class="emergent-credit-preview">
+          <img
+            src="assets/images/CaseStudy/emergent.png"
+            alt="Emergent case study interface showing credit estimates and task activity"
+            width="1440"
+            height="1024"
+            decoding="async"
+            fetchpriority="high"
+          />
+        </figure>
+
+        <span class="case-study__eyebrow emergent-summary-label">Executive summary</span>
+        <div class="emergent-summary-grid">
+          <article>
+            <span class="case-study__item-label">Current failure</span>
+            <p class="case-study__hook">Emergent bills identically whether a task is new work or the agent fixing its own mistake, with no cost estimate before a task runs. This makes spend unpredictable, charges users for platform errors, and quietly erodes trust and conversion.</p>
+          </article>
+          <article>
+            <span class="case-study__item-label">Proposed fix &amp; expected outcome</span>
+            <p class="case-study__secondary">The proposed fix: a pre-task credit estimate paired with a transparent, itemized credit ledger, so users can see exactly what’s being charged and why, in real time. Expected outcome: improved free-to-paid conversion, reduced wasted credit spend, and fewer billing disputes.</p>
+          </article>
+        </div>
+      </header>
+
+      <section class="case-study__section segmented-section emergent-section emergent-section--users" data-section-number="01" aria-labelledby="emergent-users-title">
+        <span class="case-study__eyebrow">01 · Users &amp; pain points</span>
+        <h2 id="emergent-users-title">Target users &amp; pain points.</h2>
+        <p class="case-study__lead"><strong>Who:</strong> Non-technical and lightly-technical builders—indie founders, PMs, and designers—who build apps from natural language without writing code. This spans individual self-serve users and employees at companies that purchase the platform for their teams.</p>
+        <p class="case-study__secondary"><strong>What they’re running into</strong>, from reviews and hands-on testing:</p>
+        ${renderNumberedList([
+          'Credits drain unpredictably, even on small tasks.',
+          'Bugs the agent introduces get billed the same as new work.',
+          'Builds are marked “done” while features are silently broken—confirmed firsthand: a feature I’d explicitly requested was disclosed as non-functional in a routine bullet, easy to miss.',
+          'Refunds are hard to get, even when the platform admits fault.'
+        ])}
+      </section>
+
+      <section class="case-study__section segmented-section emergent-section emergent-section--problem" data-section-number="02" aria-labelledby="emergent-problem-title">
+        <span class="case-study__eyebrow">02 · Problem</span>
+        <h2 id="emergent-problem-title">Problem statement.</h2>
+        <div class="emergent-problem-grid">
+          <article>
+            <span class="case-study__item-label">Scope decision</span>
+            <p class="case-study__lead">Reviews and testing surfaced six categories of user pain: credit economy, agent reliability, build/deploy stability, billing practices, support responsiveness, and data portability. This case study focuses on <strong>credit economy</strong>—the one problem solvable through product design alone, without model, infrastructure, or policy changes.</p>
+          </article>
+          <article>
+            <span class="case-study__item-label">Core failure</span>
+            <p class="case-study__secondary">Emergent bills identically whether a task is new work or the agent correcting its own error, with no cost estimate up front. Users can’t predict spend, pay to diagnose bugs the platform introduced, and only learn something’s wrong after the credits are gone.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="case-study__section segmented-section emergent-section emergent-section--business" data-section-number="03" aria-labelledby="emergent-business-title">
+        <span class="case-study__eyebrow">03 · Business</span>
+        <h2 id="emergent-business-title">Business impact.</h2>
+        ${renderLabelledGrid({
+          'Revenue integrity': 'Every unexplained charge risks feeling like money taken without consent—a fragile foundation for a self-serve product.',
+          'Conversion risk': 'Unpredictable billing surfaces right at the free-to-paid decision.',
+          'Public trust': 'Unexplained charges drive the exact disputes now visible in public reviews, the same channel fueling organic growth.'
+        }, 'case-study__business-impact')}
+      </section>
+
+      <section class="case-study__section segmented-section emergent-section emergent-section--alternatives" data-section-number="04" aria-labelledby="emergent-alternatives-title">
+        <span class="case-study__eyebrow">04 · Alternatives</span>
+        <h2 id="emergent-alternatives-title">Alternatives considered.</h2>
+        ${renderProcess({
+          'Lower prices / more free credits': 'Treats the symptom, not predictability or fairness.',
+          'Faster refunds': 'Still reactive; the user is surprised first.',
+          'Full code or log transparency': 'Breaks the no-code promise and the paywalled business model.',
+          'Chosen approach': 'Estimate cost upfront and make every charge clearly visible as it happens; fixes the mechanism without touching pricing, support, or the business model.'
+        })}
+      </section>
+
+      <section class="case-study__section case-study__section--solution segmented-section emergent-section emergent-section--solution" data-section-number="05" aria-labelledby="emergent-solution-title">
+        <span class="case-study__eyebrow">05 · Solution</span>
+        <h2 id="emergent-solution-title">Proposed solution.</h2>
+        <p class="case-study__lead">Every charge should be visible, clearly explained, and estimated in advance—without slowing down the fast, no-code experience that defines the product.</p>
+        <p class="case-study__secondary"><strong>Scenario:</strong> building a to-do app with recurring tasks.</p>
+        <ol class="emergent-solution-flow">
+          <li>
+            <span class="emergent-solution-flow__number">01</span>
+            <div><h3>Before the task</h3><p>Show a rough credit estimate for the build, broken down by feature (core list, due dates, recurring tasks).</p></div>
+          </li>
+          <li>
+            <span class="emergent-solution-flow__number">02</span>
+            <div><h3>During a retry</h3><p>Show clearly that this is another attempt at the same issue, with a running cost for this task so far, so the user can decide whether to continue.</p></div>
+          </li>
+          <li>
+            <span class="emergent-solution-flow__number">03</span>
+            <div><h3>At completion</h3><p>Replace the flat “done” summary with an itemized cost breakdown and a pass/fail check per feature, so what was spent and what actually works are both clear.</p></div>
+          </li>
+        </ol>
+      </section>
+
+      <section class="case-study__section segmented-section emergent-section emergent-section--metrics" data-section-number="06" aria-labelledby="emergent-metrics-title">
+        <span class="case-study__eyebrow">06 · Metrics</span>
+        <h2 id="emergent-metrics-title">Success metrics.</h2>
+        <div class="emergent-metrics">
+          <article class="emergent-metric emergent-metric--north-star">
+            <span>North star</span>
+            <strong>Free-to-paid conversion rate</strong>
+          </article>
+          <article class="emergent-metric">
+            <span>Supporting</span>
+            <strong>Credits consumed per successful build</strong>
+            <p>Efficiency and margin recovered.</p>
+          </article>
+          <article class="emergent-metric">
+            <span>Supporting</span>
+            <strong>Credit dispute / refund ticket volume</strong>
+            <p>Trust and support cost.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="case-study__section segmented-section emergent-section emergent-section--scope" data-section-number="07" aria-labelledby="emergent-scope-title">
+        <span class="case-study__eyebrow">07 · Scope</span>
+        <h2 id="emergent-scope-title">Out of scope.</h2>
+        ${renderProcess({
+          'Agent reliability': 'Context loss and regressions are a model-capability issue, not an interface one.',
+          'Build/deploy stability': 'Bundler, tunnel, and EAS crashes are an infrastructure problem.',
+          'Billing practices': 'Trial pricing and post-cancellation charges are a checkout, legal, and policy issue.',
+          'Data portability': 'Code export and deletion on cancellation are a business-model decision.',
+          'Support responsiveness': 'This transparency reduces how often users need to ask “why was I charged that,” but doesn’t fix support itself.'
+        })}
+      </section>
+
+      <section class="case-study__section segmented-section emergent-section emergent-section--validation" data-section-number="08" aria-labelledby="emergent-validation-title">
+        <span class="case-study__eyebrow">08 · Validation</span>
+        <h2 id="emergent-validation-title">Validation plan.</h2>
+        ${renderNumberedList([
+          'Share of current charges that are same-issue retries vs. genuinely new work.',
+          'Correlation between retry-heavy sessions and free-to-paid drop-off.',
+          'Current credit-dispute ticket volume, to size the potential impact.'
+        ])}
+      </section>
+    </div>
+  `;
+}
+
+function initializeCaseStudyNavigation() {
+  const navigationButtons = [...detailContent.querySelectorAll('[data-case-target]')];
+
+  navigationButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const target = detailContent.querySelector(`#${button.dataset.caseTarget}`);
+      if (!target) return;
+
+      navigationButtons.forEach((navigationButton) => {
+        navigationButton.classList.toggle('is-active', navigationButton === button);
+      });
+
+      target.closest('.segmented-section')?.scrollIntoView({
+        behavior: reducedMotionPreference.matches ? 'auto' : 'smooth',
+        block: 'start'
+      });
+    });
+  });
+}
+
+const readableParagraphSources = new WeakMap();
+
+function getReadableSentenceIntervals(text) {
+  const trimmed = text.trim();
+  if (!trimmed) return [[0, text.length]];
+
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+    const segmenter = new Intl.Segmenter('en', { granularity: 'sentence' });
+    const rawSegments = [...segmenter.segment(text)];
+    const meaningfulSegments = rawSegments.filter((seg) => /\S/.test(seg.segment));
+
+    if (meaningfulSegments.length <= 1) return [[0, text.length]];
+
+    const intervals = [];
+    for (let i = 0; i < meaningfulSegments.length; i += 1) {
+      const current = meaningfulSegments[i];
+      let start = current.index;
+      while (start < text.length && /\s/.test(text[start])) start += 1;
+
+      let end = i === meaningfulSegments.length - 1
+        ? text.length
+        : meaningfulSegments[i + 1].index;
+      while (end > start && /\s/.test(text[end - 1])) end -= 1;
+
+      if (start < end) {
+        intervals.push([start, end]);
+      }
+    }
+
+    return intervals.length > 1 ? intervals : [[0, text.length]];
+  }
+
+  const sentenceRegex = /[^.!?]+(?:[.!?]+["'’”)]*|\s*$)/g;
+  const matches = [...text.matchAll(sentenceRegex)].filter((match) => /\S/.test(match[0]));
+
+  if (matches.length <= 1) return [[0, text.length]];
+
+  const intervals = [];
+  for (const match of matches) {
+    let start = match.index;
+    while (start < text.length && /\s/.test(text[start])) start += 1;
+    let end = match.index + match[0].length;
+    while (end > start && /\s/.test(text[end - 1])) end -= 1;
+    if (start < end) {
+      intervals.push([start, end]);
+    }
+  }
+
+  return intervals.length > 1 ? intervals : [[0, text.length]];
+}
+
+function resolveTextOffset(textNodes, offset, isEndBoundary) {
+  let runningOffset = 0;
+
+  for (let index = 0; index < textNodes.length; index += 1) {
+    const node = textNodes[index];
+    const nodeEnd = runningOffset + node.nodeValue.length;
+    const isLastNode = index === textNodes.length - 1;
+
+    if (
+      offset < nodeEnd
+      || (isEndBoundary && offset === nodeEnd)
+      || isLastNode
+    ) {
+      return {
+        node,
+        offset: Math.max(0, Math.min(node.nodeValue.length, offset - runningOffset))
+      };
+    }
+
+    runningOffset = nodeEnd;
+  }
+
+  return null;
+}
+
+function formatReadableParagraph(paragraph) {
+  if (!readableParagraphSources.has(paragraph)) {
+    readableParagraphSources.set(paragraph, paragraph.innerHTML);
+  }
+
+  paragraph.innerHTML = readableParagraphSources.get(paragraph);
+
+  const source = paragraph.cloneNode(true);
+  const text = source.textContent;
+  const intervals = getReadableSentenceIntervals(text);
+  if (intervals.length <= 1) return;
+
+  const walker = document.createTreeWalker(source, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
+  let textNode = walker.nextNode();
+
+  while (textNode) {
+    textNodes.push(textNode);
+    textNode = walker.nextNode();
+  }
+
+  const chunks = intervals.map(([startOffset, endOffset]) => {
+    const start = resolveTextOffset(textNodes, startOffset, false);
+    const end = resolveTextOffset(textNodes, endOffset, true);
+    const chunk = document.createElement('span');
+    chunk.className = 'readable-chunk';
+
+    if (!start || !end) return chunk;
+
+    const range = document.createRange();
+    range.setStart(start.node, start.offset);
+    range.setEnd(end.node, end.offset);
+    chunk.append(range.cloneContents());
+    return chunk;
+  });
+
+  paragraph.replaceChildren(...chunks);
+}
+
+function formatCaseStudyParagraphs() {
+  detailContent.querySelectorAll('.case-study p').forEach((paragraph) => {
+    formatReadableParagraph(paragraph);
+  });
+}
+
 function populateCardDetail(projectId, projectTitle) {
   const project = PROJECTS_BY_ID.get(projectId);
 
   detailContent.dataset.projectId = projectId;
   detailContent.setAttribute('aria-label', `${projectTitle} content`);
-  detailContent.innerHTML = project
-    ? renderCaseStudy(project)
-    : '<div class="case-study__missing"><h1>Project details coming soon.</h1></div>';
+  if (projectId === 'emergent') {
+    detailContent.innerHTML = renderEmergentCaseStudy();
+  } else {
+    detailContent.innerHTML = project
+      ? renderCaseStudy(project)
+      : '<div class="case-study__missing"><h1>Project details coming soon.</h1></div>';
+  }
 
   initializeProjectGalleryControls();
+  initializeCaseStudyNavigation();
+  formatCaseStudyParagraphs();
 
   return project;
 }
@@ -806,7 +1238,9 @@ function commitCardDetail(projectId, projectTitle, addToBrowserHistory = true) {
   document.title = 'Jatin Davis';
 
   if (addToBrowserHistory) {
-    history.pushState({ projectId }, '', `#work/${projectId}`);
+    const projectCard = document.querySelector(`[data-project-id="${projectId}"]`);
+    const section = projectCard?.dataset.projectSection || 'work';
+    history.pushState({ projectId }, '', `#${section}/${projectId}`);
   }
 }
 
@@ -984,7 +1418,7 @@ async function morphCardIntoDetail(card, projectId, projectTitle) {
       fill: 'forwards'
     });
 
-    const surfaceContent = surface.querySelectorAll('.project-card__title, .project-card__tags');
+    const surfaceContent = surface.querySelectorAll('.project-card__title, .project-card__impact, .project-card__tags');
     surfaceContent.forEach((element) => {
       element.animate([
         { opacity: 1, transform: 'translate3d(0, 0, 0)' },
@@ -1107,7 +1541,7 @@ cards.forEach((card, cardIndex) => {
 });
 
 detailBackButton.addEventListener('click', () => {
-  if (window.location.hash.startsWith('#work/')) {
+  if (/^#(?:work|case-studies)\//.test(window.location.hash)) {
     history.back();
     return;
   }
@@ -1116,7 +1550,7 @@ detailBackButton.addEventListener('click', () => {
 });
 
 window.addEventListener('popstate', () => {
-  const projectMatch = window.location.hash.match(/^#work\/([a-z0-9-]+)$/);
+  const projectMatch = window.location.hash.match(/^#(?:work|case-studies)\/([a-z0-9-]+)$/);
 
   if (projectMatch) {
     const matchingCard = document.querySelector(`[data-project-id="${projectMatch[1]}"]`);
@@ -1128,7 +1562,7 @@ window.addEventListener('popstate', () => {
 });
 
 // Restore a linked project page when the site loads with a project hash.
-const initialProjectMatch = window.location.hash.match(/^#work\/([a-z0-9-]+)$/);
+const initialProjectMatch = window.location.hash.match(/^#(?:work|case-studies)\/([a-z0-9-]+)$/);
 if (initialProjectMatch) {
   const matchingCard = document.querySelector(`[data-project-id="${initialProjectMatch[1]}"]`);
   const projectTitle = matchingCard?.dataset.projectTitle || 'Selected project';
@@ -1494,6 +1928,7 @@ cardCollection.addEventListener('scroll', scheduleNavigationSync, { passive: tru
 window.addEventListener('scroll', scheduleNavigationSync, { passive: true });
 window.addEventListener('resize', scheduleNavigationSync);
 mobileLayoutPreference.addEventListener('change', scheduleNavigationSync);
+mobileLayoutPreference.addEventListener('change', formatCaseStudyParagraphs);
 syncNavigationToScroll();
 
 /* Hovering over the navigation markers previews each grid in the center. */

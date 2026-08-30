@@ -14,9 +14,13 @@
       crossorigin
     />
 
-    <!-- Nanum Gothic Coding for body text; local Mersad for headings -->
+    <!-- Nanum Gothic Coding for body text; Google Sans / Roboto for high-reading case study body; Mersad for headings -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&amp;family=Roboto:ital,wght@0,300..700;1,300..700&amp;display=swap"
+      rel="stylesheet"
+    />
     <link
       href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&amp;display=swap"
       rel="stylesheet"
@@ -70,22 +74,30 @@
               class="navigation-target navigation-target--3"
               type="button"
               data-grid-index="2"
-              aria-label="Show Builds"
+              aria-label="Show Case Studies"
             >
-              <span class="navigation-label">Builds</span>
+              <span class="navigation-label">Case Studies</span>
             </button>
             <button
               class="navigation-target navigation-target--4"
               type="button"
               data-grid-index="3"
-              aria-label="Show About"
+              aria-label="Show Builds"
             >
-              <span class="navigation-label">About</span>
+              <span class="navigation-label">Builds</span>
             </button>
             <button
               class="navigation-target navigation-target--5"
               type="button"
               data-grid-index="4"
+              aria-label="Show About"
+            >
+              <span class="navigation-label">About</span>
+            </button>
+            <button
+              class="navigation-target navigation-target--6"
+              type="button"
+              data-grid-index="5"
               aria-label="Show More"
             >
               <span class="navigation-label">Contact</span>
@@ -118,7 +130,7 @@
               aria-hidden="true"
             >
               <source
-                src="make_an_ai_orb_video_with_comp%20(online-video-cutter.com).mp4"
+                src="assets/videos/make_an_ai_orb_video_with_comp%20(online-video-cutter.com).mp4"
                 type="video/mp4"
               />
             </video>
@@ -164,6 +176,7 @@
               />
             </div>
             <h2 class="project-card__title">Double AI — Voice Enabled identity Agent</h2>
+            <p class="project-card__impact">Impact: serving 600+ users.</p>
             <ul class="project-card__tags" aria-label="Project tags">
               <li>AI twin</li>
               <li>AI SaaS</li>
@@ -190,6 +203,7 @@
               />
             </div>
             <h2 class="project-card__title">AutoFlux.in</h2>
+            <p class="project-card__impact">Shipped 188 variants across 103 live pages.</p>
             <ul class="project-card__tags" aria-label="Project tags">
               <li>0→1 product</li>
               <li>Decision design</li>
@@ -216,6 +230,7 @@
               />
             </div>
             <h2 class="project-card__title">U3K Instrument Cluster</h2>
+            <p class="project-card__impact">Selected for prototype development.</p>
             <ul class="project-card__tags" aria-label="Project tags">
               <li>Automotive HMI</li>
               <li>Safety-critical UI</li>
@@ -241,6 +256,7 @@
               />
             </div>
             <h2 class="project-card__title">Formula 1 Visual Storytelling</h2>
+            <p class="project-card__impact">1.45M+ views and 1,000 subscribers.</p>
             <ul class="project-card__tags" aria-label="Project tags">
               <li>Creative side project</li>
               <li>AI media</li>
@@ -266,6 +282,7 @@
               />
             </div>
             <h2 class="project-card__title">Quilo Chrome Extension</h2>
+            <p class="project-card__impact">41 users and 680 peak page visits.</p>
             <ul class="project-card__tags" aria-label="Project tags">
               <li>0→1 product</li>
               <li>Browser extension</li>
@@ -291,6 +308,7 @@
               />
             </div>
             <h2 class="project-card__title">Maruti Suzuki SmartPlay Pro X</h2>
+            <p class="project-card__impact">Shipped in 100,000+ production cars.</p>
             <ul class="project-card__tags" aria-label="Project tags">
               <li>10.1-inch</li>
               <li>Infotainment HMI</li>
@@ -299,7 +317,39 @@
           </article>
         </div>
 
-        <!-- Grid 2: builds and motion prototypes -->
+        <!-- Grid 2: dedicated case studies -->
+        <div class="card-grid card-grid--case-studies">
+          <article
+            class="card project-card project-card--featured case-study-card"
+            data-project-id="emergent"
+            data-project-title="Emergent"
+            data-project-section="case-studies"
+            tabindex="0"
+          >
+            <div class="project-card__media case-study-card__visual">
+              <img
+                src="assets/images/CaseStudy/emergent.png"
+                alt="Emergent credit economy case study"
+                width="1440"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <h2 class="project-card__title">Emergent — Fixing the Credit Economy</h2>
+            <p class="project-card__impact">
+              Expected impact: higher free-to-paid conversion and fewer billing disputes.
+            </p>
+            <ul class="project-card__tags" aria-label="Case study tags">
+              <li>Credit economy</li>
+              <li>AI builder</li>
+              <li>Billing UX</li>
+              <li>Trust</li>
+            </ul>
+          </article>
+        </div>
+
+        <!-- Grid 3: builds and motion prototypes -->
         <div class="card-grid card-grid--mosaic is-prototypes-expanded">
           <!-- Featured build: AI Twin -->
           <article
@@ -480,7 +530,7 @@
           </button>
         </div>
 
-        <!-- Grid 3: about, experience, skills, and interests -->
+        <!-- Grid 4: about, experience, skills, and interests -->
         <div class="card-grid card-grid--four-cards">
           <article class="card card--static card--no-tilt about-card about-card--profile">
             <span class="about-card__eyebrow">About</span>
@@ -583,7 +633,7 @@
           </article>
         </div>
 
-        <!-- Grid 4: certifications, achievements, and contact details -->
+        <!-- Grid 5: certifications, achievements, and contact details -->
         <div class="card-grid card-grid--more">
           <article class="card card--static card--no-tilt more-card more-card--certifications">
             <header class="more-card__header">

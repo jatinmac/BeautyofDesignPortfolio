@@ -927,7 +927,7 @@ function renderEmergentCaseStudy() {
           <button type="button" data-case-target="emergent-validation-title"><span>08</span>Validation</button>
         </nav>
 
-        <figure class="emergent-credit-preview">
+        <figure class="case-study__hero-media emergent-credit-preview">
           <img
             src="assets/images/CaseStudy/emergent.png"
             alt="Emergent case study interface showing credit estimates and task activity"
@@ -937,6 +937,30 @@ function renderEmergentCaseStudy() {
             fetchpriority="high"
           />
         </figure>
+
+        <section class="emergent-video" aria-labelledby="emergent-video-title">
+          <span class="case-study__eyebrow">Product walkthrough</span>
+          <h2 id="emergent-video-title">See the proposed experience in action.</h2>
+          <div class="case-study__video case-study__video--click-to-play" data-loom-video>
+            <button
+              class="case-study__video-play"
+              type="button"
+              data-loom-play
+              aria-label="Play the Emergent product walkthrough"
+            >
+              <img
+                src="assets/images/CaseStudy/emergent.png"
+                alt=""
+                width="1440"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              />
+              <span class="case-study__video-play-icon" aria-hidden="true"></span>
+              <span class="case-study__video-play-label">Play walkthrough</span>
+            </button>
+          </div>
+        </section>
 
         <span class="case-study__eyebrow emergent-summary-label">Executive summary</span>
         <div class="emergent-summary-grid">
@@ -1087,6 +1111,23 @@ function initializeCaseStudyNavigation() {
   });
 }
 
+function initializeInlineVideos() {
+  detailContent.querySelectorAll('[data-loom-video]').forEach((container) => {
+    const playButton = container.querySelector('[data-loom-play]');
+    if (!playButton) return;
+
+    playButton.addEventListener('click', () => {
+      const iframe = document.createElement('iframe');
+      iframe.src = 'https://www.loom.com/embed/3f27f295a4324b0da973c9463540d34b?autoplay=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true';
+      iframe.title = 'Emergent product walkthrough';
+      iframe.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
+      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+      iframe.setAttribute('allowfullscreen', '');
+      container.replaceChildren(iframe);
+    }, { once: true });
+  });
+}
+
 const readableParagraphSources = new WeakMap();
 
 function getReadableSentenceIntervals(text) {
@@ -1223,6 +1264,7 @@ function populateCardDetail(projectId, projectTitle) {
 
   initializeProjectGalleryControls();
   initializeCaseStudyNavigation();
+  initializeInlineVideos();
   formatCaseStudyParagraphs();
 
   return project;

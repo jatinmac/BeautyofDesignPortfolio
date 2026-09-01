@@ -155,13 +155,48 @@
                   focusable="false"
                 >
                   <defs>
+                    <radialGradient
+                      id="intro-cursor-face-inner-glow"
+                      cx="36%"
+                      cy="30%"
+                      r="72%"
+                      fx="36%"
+                      fy="30%"
+                    >
+                      <stop offset="0%" stop-color="#242424" />
+                      <stop offset="38%" stop-color="#080808" />
+                      <stop offset="68%" stop-color="black" />
+                      <stop offset="86%" stop-color="#181818" />
+                      <stop offset="100%" stop-color="#626262" />
+                    </radialGradient>
+                    <radialGradient
+                      id="intro-cursor-face-specular-glow"
+                      cx="28%"
+                      cy="20%"
+                      r="56%"
+                    >
+                      <stop offset="0%" stop-color="white" stop-opacity="0.16" />
+                      <stop offset="42%" stop-color="white" stop-opacity="0.035" />
+                      <stop offset="100%" stop-color="white" stop-opacity="0" />
+                    </radialGradient>
                     <clipPath id="intro-cursor-face-boundary">
                       <circle cx="67.0587" cy="67.0587" r="67.0587" />
                     </clipPath>
                   </defs>
-                  <use
+                  <circle
                     class="cursor-face__head"
-                    href="assets/svg/face.svg#cursor-face-head-shape"
+                    cx="67.0587"
+                    cy="67.0587"
+                    r="67.0587"
+                    fill="url(#intro-cursor-face-inner-glow)"
+                  />
+                  <circle
+                    class="cursor-face__head"
+                    cx="67.0587"
+                    cy="67.0587"
+                    r="67.0587"
+                    fill="url(#intro-cursor-face-specular-glow)"
+                    pointer-events="none"
                   />
                   <g clip-path="url(#intro-cursor-face-boundary)">
                     <g class="cursor-face__eyes">

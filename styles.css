@@ -998,6 +998,58 @@ body.is-card-transitioning .detail-page {
   text-align: left;
 }
 
+.cursor-face {
+  position: relative;
+  align-self: flex-start;
+  width: 128px;
+  height: 128px;
+  margin-bottom: 26px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.cursor-face__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  border: 0;
+  pointer-events: none;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.cursor-face__head,
+.cursor-face__eyes,
+.cursor-face__blink,
+.cursor-face__eye {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.cursor-face__eyes,
+.cursor-face__eye {
+  will-change: transform;
+}
+
+.cursor-face__blink {
+  transform-origin: center;
+}
+
+.cursor-face__blink.is-blinking {
+  animation: cursor-face-blink 190ms cubic-bezier(0.32, 0, 0.2, 1) 1;
+}
+
+@keyframes cursor-face-blink {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+
+  42%, 58% {
+    transform: scaleY(0.06);
+  }
+}
+
 .intro-card h1,
 .intro-card p,
 .intro-card ul {
@@ -2564,6 +2616,12 @@ body.is-card-transitioning .detail-page {
     padding: 20px;
   }
 
+  .cursor-face {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 20px;
+  }
+
   .intro-card__lead {
     max-width: 30ch;
     margin-top: 18px !important;
@@ -2872,6 +2930,10 @@ body.is-card-transitioning .detail-page {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .cursor-face__blink.is-blinking {
+    animation: none;
   }
 
 }

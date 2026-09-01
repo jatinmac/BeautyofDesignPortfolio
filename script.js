@@ -23,6 +23,11 @@ const motionPrototypeCards = document.querySelectorAll('.motion-prototype-card')
 const introCard = document.querySelector('.intro-card');
 const introTitle = introCard.querySelector('h1');
 const introParticleCanvas = introCard.querySelector('.intro-card__particles');
+const cursorFace = introCard.querySelector('.cursor-face');
+const cursorFaceAsset = cursorFace.querySelector('.cursor-face__svg');
+const cursorFaceBlink = cursorFaceAsset.querySelector('.cursor-face__blink');
+const cursorFaceLeftEye = cursorFaceAsset.querySelector('.cursor-face__eye--left');
+const cursorFaceRightEye = cursorFaceAsset.querySelector('.cursor-face__eye--right');
 const reducedMotionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
 const mobileLayoutPreference = window.matchMedia('(max-width: 760px)');
 
@@ -34,6 +39,229 @@ introParticleCanvas.hidden = reducedMotionPreference.matches;
 
 if (!reducedMotionPreference.matches) {
   introTitle.style.opacity = '0';
+}
+
+
+/* ---------- Cursor-reactive intro face ---------- */
+
+if (!reducedMotionPreference.matches) {
+  const faceMotion = {
+    targetX: 0,
+    targetY: 0,
+    head: { x: 0, y: 0, velocityX: 0, velocityY: 0 },
+    leftEye: { x: 0, y: 0, velocityX: 0, velocityY: 0, targetX: 0, targetY: 0 },
+    rightEye: { x: 0, y: 0, velocityX: 0, velocityY: 0, targetX: 0, targetY: 0 },
+    frameId: null,
+    previousFrameTime: null,
+    previousPointerX: null,
+    previousPointerY: null,
+    previousPointerTime: null
+  };
+
+  function clampFaceMotion(value) {
+    return Math.max(-1, Math.min(1, value));
+  }
+
+  function updateFaceSpring(state, targetX, targetY, stiffness, damping, frameScale) {
+    state.velocityX += (targetX - state.x) * stiffness * frameScale;
+    state.velocityY += (targetY - state.y) * stiffness * frameScale;
+    state.velocityX *= damping ** frameScale;
+    state.velocityY *= damping ** frameScale;
+    state.x += state.velocityX * frameScale;
+    state.y += state.velocityY * frameScale;
+  }
+
+  function getCursorGaze(cursorX, cursorY, originX, originY, responseRadius) {
+    const deltaX = cursorX - originX;
+    const deltaY = cursorY - originY;
+    const distance = Math.max(0.001, Math.hypot(deltaX, deltaY));
+    const intensity = 1 - Math.exp(-distance / responseRadius);
+
+    return {
+      x: deltaX / distance * intensity,
+      y: deltaY / distance * intensity
+    };
+  }
+
+  function renderCursorFace(now) {
+    const frameScale = faceMotion.previousFrameTime === null
+      ? 1
+      : Math.min(2, (now - faceMotion.previousFrameTime) / 16.67);
+
+    faceMotion.previousFrameTime = now;
+
+    updateFaceSpring(
+      faceMotion.head,
+      faceMotion.targetX,
+      faceMotion.targetY,
+      0.035,
+      0.74,
+      frameScale
+    );
+    updateFaceSpring(
+      faceMotion.leftEye,
+      faceMotion.leftEye.targetX,
+      faceMotion.leftEye.targetY,
+      0.11,
+      0.63,
+      frameScale
+    );
+    updateFaceSpring(
+      faceMotion.rightEye,
+      faceMotion.rightEye.targetX,
+      faceMotion.rightEye.targetY,
+      0.092,
+      0.67,
+      frameScale
+    );
+
+    const headDistance = Math.min(1, Math.hypot(faceMotion.head.x, faceMotion.head.y));
+    const headVelocity = Math.hypot(faceMotion.head.velocityX, faceMotion.head.velocityY);
+    const renderedLeftX = clampFaceMotion(faceMotion.leftEye.x + faceMotion.leftEye.velocityX * 0.55);
+    const renderedLeftY = clampFaceMotion(faceMotion.leftEye.y + faceMotion.leftEye.velocityY * 0.55);
+    const renderedRightX = clampFaceMotion(faceMotion.rightEye.x + faceMotion.rightEye.velocityX * 0.68);
+    const renderedRightY = clampFaceMotion(faceMotion.rightEye.y + faceMotion.rightEye.velocityY * 0.68);
+
+    cursorFaceAsset.style.transform = `translate(${faceMotion.head.x * 4}px, ${faceMotion.head.y * 4}px) rotate(${faceMotion.head.x * 3.8}deg) scale(${1 + headDistance * 0.008 + headVelocity * 0.035}, ${1 - headDistance * 0.006 + headVelocity * 0.018})`;
+    cursorFaceLeftEye.style.transform = `translate(${renderedLeftX * 36}px, ${renderedLeftY * 33}px) rotate(${renderedLeftX * 15 - renderedLeftY * 3}deg)`;
+    cursorFaceRightEye.style.transform = `translate(${renderedRightX * 39}px, ${renderedRightY * 35}px) rotate(${renderedRightX * 18 + renderedRightY * 3}deg)`;
+
+    const springs = [faceMotion.head, faceMotion.leftEye, faceMotion.rightEye];
+    const isSettled = Math.abs(faceMotion.head.x - faceMotion.targetX) < 0.001
+      && Math.abs(faceMotion.head.y - faceMotion.targetY) < 0.001
+      && Math.abs(faceMotion.leftEye.x - faceMotion.leftEye.targetX) < 0.001
+      && Math.abs(faceMotion.leftEye.y - faceMotion.leftEye.targetY) < 0.001
+      && Math.abs(faceMotion.rightEye.x - faceMotion.rightEye.targetX) < 0.001
+      && Math.abs(faceMotion.rightEye.y - faceMotion.rightEye.targetY) < 0.001
+      && springs.every((spring) => (
+        Math.abs(spring.velocityX) < 0.0005 && Math.abs(spring.velocityY) < 0.0005
+      ));
+
+    if (isSettled) {
+      faceMotion.frameId = null;
+      faceMotion.previousFrameTime = null;
+      return;
+    }
+
+    faceMotion.frameId = requestAnimationFrame(renderCursorFace);
+  }
+
+  function startCursorFaceMotion() {
+    if (faceMotion.frameId === null) {
+      faceMotion.frameId = requestAnimationFrame(renderCursorFace);
+    }
+  }
+
+  window.addEventListener('pointermove', (event) => {
+    const faceBounds = cursorFace.getBoundingClientRect();
+    const centerX = faceBounds.left + faceBounds.width / 2;
+    const centerY = faceBounds.top + faceBounds.height / 2;
+    const leftEyeCenterX = faceBounds.left + faceBounds.width * (51.525 / 135);
+    const rightEyeCenterX = faceBounds.left + faceBounds.width * (83.525 / 135);
+    const eyeCenterY = faceBounds.top + faceBounds.height * (67.06 / 135);
+    const responseRadius = Math.max(
+      160,
+      Math.min(240, Math.min(window.innerWidth, window.innerHeight) * 0.25)
+    );
+    const headGaze = getCursorGaze(
+      event.clientX,
+      event.clientY,
+      centerX,
+      centerY,
+      responseRadius * 1.15
+    );
+    const leftGaze = getCursorGaze(
+      event.clientX,
+      event.clientY,
+      leftEyeCenterX,
+      eyeCenterY,
+      responseRadius
+    );
+    const rightGaze = getCursorGaze(
+      event.clientX,
+      event.clientY,
+      rightEyeCenterX,
+      eyeCenterY,
+      responseRadius
+    );
+    const pointerTime = event.timeStamp || performance.now();
+    const pointerDeltaTime = faceMotion.previousPointerTime === null
+      ? 16.67
+      : Math.max(8, Math.min(80, pointerTime - faceMotion.previousPointerTime));
+    const pointerVelocityX = faceMotion.previousPointerX === null
+      ? 0
+      : (event.clientX - faceMotion.previousPointerX) / pointerDeltaTime;
+    const pointerVelocityY = faceMotion.previousPointerY === null
+      ? 0
+      : (event.clientY - faceMotion.previousPointerY) / pointerDeltaTime;
+    const velocityLeadX = clampFaceMotion(pointerVelocityX * 0.055) * 0.12;
+    const velocityLeadY = clampFaceMotion(pointerVelocityY * 0.055) * 0.12;
+
+    faceMotion.targetX = clampFaceMotion(headGaze.x);
+    faceMotion.targetY = clampFaceMotion(headGaze.y);
+    faceMotion.leftEye.targetX = clampFaceMotion(
+      leftGaze.x * (leftGaze.x < 0 ? 1.04 : 0.92) + velocityLeadX
+    );
+    faceMotion.leftEye.targetY = clampFaceMotion(leftGaze.y * 0.96 + velocityLeadY);
+    faceMotion.rightEye.targetX = clampFaceMotion(
+      rightGaze.x * (rightGaze.x > 0 ? 1.04 : 0.92) + velocityLeadX * 0.86
+    );
+    faceMotion.rightEye.targetY = clampFaceMotion(rightGaze.y * 1.02 + velocityLeadY * 0.9);
+    faceMotion.previousPointerX = event.clientX;
+    faceMotion.previousPointerY = event.clientY;
+    faceMotion.previousPointerTime = pointerTime;
+    startCursorFaceMotion();
+  }, { passive: true });
+
+  document.documentElement.addEventListener('mouseleave', () => {
+    faceMotion.targetX = 0;
+    faceMotion.targetY = 0;
+    faceMotion.leftEye.targetX = 0;
+    faceMotion.leftEye.targetY = 0;
+    faceMotion.rightEye.targetX = 0;
+    faceMotion.rightEye.targetY = 0;
+    faceMotion.previousPointerX = null;
+    faceMotion.previousPointerY = null;
+    faceMotion.previousPointerTime = null;
+    startCursorFaceMotion();
+  });
+
+  let blinkTimerId = null;
+
+  function scheduleCursorFaceBlink(delay = 2400 + Math.random() * 4200) {
+    window.clearTimeout(blinkTimerId);
+    blinkTimerId = window.setTimeout(() => playCursorFaceBlink(true), delay);
+  }
+
+  function playCursorFaceBlink(canDoubleBlink) {
+    if (document.hidden) {
+      scheduleCursorFaceBlink();
+      return;
+    }
+
+    cursorFaceBlink.classList.add('is-blinking');
+    cursorFaceBlink.addEventListener('animationend', () => {
+      cursorFaceBlink.classList.remove('is-blinking');
+
+      if (canDoubleBlink && Math.random() < 0.18) {
+        blinkTimerId = window.setTimeout(() => playCursorFaceBlink(false), 115 + Math.random() * 95);
+        return;
+      }
+
+      scheduleCursorFaceBlink();
+    }, { once: true });
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      window.clearTimeout(blinkTimerId);
+      return;
+    }
+
+    scheduleCursorFaceBlink(900 + Math.random() * 1800);
+  });
+
+  scheduleCursorFaceBlink(1600 + Math.random() * 1800);
 }
 
 
@@ -938,6 +1166,18 @@ function renderEmergentCaseStudy() {
           />
         </figure>
 
+        <span class="case-study__eyebrow emergent-summary-label">Executive summary</span>
+        <div class="emergent-summary-grid">
+          <article>
+            <span class="case-study__item-label">Current failure</span>
+            <p class="case-study__hook">Emergent bills identically whether a task is new work or the agent fixing its own mistake, with no cost estimate before a task runs. This makes spend unpredictable, charges users for platform errors, and quietly erodes trust and conversion.</p>
+          </article>
+          <article>
+            <span class="case-study__item-label">Proposed fix &amp; expected outcome</span>
+            <p class="case-study__secondary">The proposed fix: a pre-task credit estimate paired with a transparent, itemized credit ledger, so users can see exactly what’s being charged and why, in real time. Expected outcome: improved free-to-paid conversion, reduced wasted credit spend, and fewer billing disputes.</p>
+          </article>
+        </div>
+
         <section class="emergent-video" aria-labelledby="emergent-video-title">
           <span class="case-study__eyebrow">Product walkthrough</span>
           <h2 id="emergent-video-title">See the proposed experience in action.</h2>
@@ -961,18 +1201,6 @@ function renderEmergentCaseStudy() {
             </button>
           </div>
         </section>
-
-        <span class="case-study__eyebrow emergent-summary-label">Executive summary</span>
-        <div class="emergent-summary-grid">
-          <article>
-            <span class="case-study__item-label">Current failure</span>
-            <p class="case-study__hook">Emergent bills identically whether a task is new work or the agent fixing its own mistake, with no cost estimate before a task runs. This makes spend unpredictable, charges users for platform errors, and quietly erodes trust and conversion.</p>
-          </article>
-          <article>
-            <span class="case-study__item-label">Proposed fix &amp; expected outcome</span>
-            <p class="case-study__secondary">The proposed fix: a pre-task credit estimate paired with a transparent, itemized credit ledger, so users can see exactly what’s being charged and why, in real time. Expected outcome: improved free-to-paid conversion, reduced wasted credit spend, and fewer billing disputes.</p>
-          </article>
-        </div>
       </header>
 
       <section class="case-study__section segmented-section emergent-section emergent-section--users" data-section-number="01" aria-labelledby="emergent-users-title">

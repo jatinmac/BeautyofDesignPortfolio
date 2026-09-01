@@ -147,6 +147,38 @@
             <canvas class="intro-card__particles" aria-hidden="true"></canvas>
 
             <div class="intro-card__content">
+              <div class="cursor-face" aria-hidden="true">
+                <svg
+                  class="cursor-face__svg"
+                  viewBox="0 0 135 135"
+                  xmlns="http://www.w3.org/2000/svg"
+                  focusable="false"
+                >
+                  <defs>
+                    <clipPath id="intro-cursor-face-boundary">
+                      <circle cx="67.0587" cy="67.0587" r="67.0587" />
+                    </clipPath>
+                  </defs>
+                  <use
+                    class="cursor-face__head"
+                    href="assets/svg/face.svg#cursor-face-head-shape"
+                  />
+                  <g clip-path="url(#intro-cursor-face-boundary)">
+                    <g class="cursor-face__eyes">
+                      <g class="cursor-face__blink">
+                        <use
+                          class="cursor-face__eye cursor-face__eye--left"
+                          href="assets/svg/face.svg#cursor-face-left-eye-shape"
+                        />
+                        <use
+                          class="cursor-face__eye cursor-face__eye--right"
+                          href="assets/svg/face.svg#cursor-face-right-eye-shape"
+                        />
+                      </g>
+                    </g>
+                  </g>
+                </svg>
+              </div>
               <h1>Jatin Davis</h1>
               <p class="intro-card__lead">
                 <strong>User and business driven AI native product designer & builder</strong>. Worked in <strong>b2b and b2c</strong> across <strong>Double AI</strong> (voice ai startup), <strong>Maruti Suzuki</strong> (largest automobile manufactures in india), <strong>Quilo</strong> and <strong>AutoFlux.in</strong>.

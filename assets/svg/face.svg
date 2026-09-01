@@ -1,0 +1,47 @@
+<svg width="135" height="135" viewBox="0 0 135 135" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .cursor-face__head,
+    .cursor-face__eyes,
+    .cursor-face__blink,
+    .cursor-face__eye {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .cursor-face__eyes,
+    .cursor-face__eye {
+      will-change: transform;
+    }
+
+    .cursor-face__blink {
+      animation: cursor-face-blink 5.8s ease-in-out infinite;
+    }
+
+    @keyframes cursor-face-blink {
+      0%, 44%, 48%, 100% { transform: scaleY(1); }
+      46% { transform: scaleY(0.08); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cursor-face__blink { animation: none; }
+    }
+  </style>
+
+  <defs>
+    <clipPath id="cursor-face-boundary">
+      <circle cx="67.0587" cy="67.0587" r="67.0587"/>
+    </clipPath>
+  </defs>
+
+  <g class="cursor-face__head">
+    <circle id="cursor-face-head-shape" cx="67.0587" cy="67.0587" r="67.0587" fill="black"/>
+    <g clip-path="url(#cursor-face-boundary)">
+      <g class="cursor-face__eyes">
+        <g class="cursor-face__blink">
+          <rect id="cursor-face-left-eye-shape" class="cursor-face__eye cursor-face__eye--left" x="46.5" y="52.67" width="10.05" height="28.78" rx="4" fill="white"/>
+          <rect id="cursor-face-right-eye-shape" class="cursor-face__eye cursor-face__eye--right" x="78.5" y="52.67" width="10.05" height="28.78" rx="4" fill="white"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

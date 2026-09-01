@@ -2613,6 +2613,7 @@ body.is-card-transitioning .detail-page {
   }
 
   .intro-card__content {
+    align-items: flex-start;
     padding: 20px;
   }
 

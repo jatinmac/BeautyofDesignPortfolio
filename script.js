@@ -2580,7 +2580,57 @@ if (initialProjectMatch) {
   showCardDetail(initialProjectMatch[1], projectTitle, false);
 }
 
-/* ---------- Playful falling balls ---------- */
+/* ---------- Playful falling mascots ---------- */
+
+function createFallingMascot(index) {
+  const mascot = cursorFaceAsset.cloneNode(true);
+  const definitionSuffix = `falling-mascot-${Date.now()}-${index}`;
+  const definitionIds = new Map();
+
+  mascot.classList.remove('cursor-face__svg');
+  mascot.classList.add('falling-ball__mascot');
+  mascot.removeAttribute('style');
+  mascot.style.setProperty(
+    '--falling-mascot-blink-duration',
+    `${1800 + Math.random() * 1200}ms`
+  );
+  mascot.style.setProperty(
+    '--falling-mascot-blink-delay',
+    `${-Math.random() * 2600}ms`
+  );
+
+  // SVG definition IDs must be unique when many mascot copies share the page.
+  mascot.querySelectorAll('[id]').forEach((definition) => {
+    const originalId = definition.id;
+    const uniqueId = `${originalId}-${definitionSuffix}`;
+    definitionIds.set(originalId, uniqueId);
+    definition.id = uniqueId;
+  });
+
+  mascot.querySelectorAll('*').forEach((node) => {
+    ['fill', 'stroke', 'clip-path', 'mask', 'filter'].forEach((attributeName) => {
+      const attributeValue = node.getAttribute(attributeName);
+      if (!attributeValue) return;
+
+      definitionIds.forEach((uniqueId, originalId) => {
+        node.setAttribute(
+          attributeName,
+          node.getAttribute(attributeName).replace(`url(#${originalId})`, `url(#${uniqueId})`)
+        );
+      });
+    });
+  });
+
+  // The intro mascot may be mid-expression when the button is pressed. Reset
+  // each falling copy before its own independent blink animation begins.
+  mascot.querySelectorAll('.cursor-face__eyes, .cursor-face__blink, .cursor-face__eye')
+    .forEach((node) => {
+      node.removeAttribute('style');
+      node.classList.remove('is-blinking');
+    });
+
+  return mascot;
+}
 
 function dropBalls(onComplete) {
   const layer = document.createElement('div');
@@ -2605,7 +2655,7 @@ function dropBalls(onComplete) {
 
     element.className = 'falling-ball';
     element.style.setProperty('--ball-size', `${size}px`);
-    element.style.setProperty('--ball-hue', String(hue));
+    element.append(createFallingMascot(index));
     layer.append(element);
 
     balls.push({

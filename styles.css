@@ -1037,7 +1037,7 @@ body.is-card-transitioning .detail-page {
 }
 
 .cursor-face__blink.is-blinking {
-  animation: cursor-face-blink 190ms cubic-bezier(0.32, 0, 0.2, 1) 1;
+  animation: cursor-face-blink var(--cursor-face-blink-duration, 190ms) cubic-bezier(0.32, 0, 0.2, 1) 1;
 }
 
 @keyframes cursor-face-blink {

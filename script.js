@@ -45,6 +45,263 @@ if (!reducedMotionPreference.matches) {
 /* ---------- Cursor-reactive intro face ---------- */
 
 if (!reducedMotionPreference.matches) {
+  function createCursorFaceEyePose(overrides = {}) {
+    return {
+      x: 0,
+      y: 0,
+      rotation: 0,
+      scaleX: 1,
+      scaleY: 1,
+      ...overrides
+    };
+  }
+
+  function createCursorFaceEyeVelocity() {
+    return { x: 0, y: 0, rotation: 0, scaleX: 0, scaleY: 0 };
+  }
+
+  function createCursorFaceExpression(left, right, options = {}) {
+    return {
+      left: createCursorFaceEyePose(left),
+      right: createCursorFaceEyePose(right),
+      gaze: options.gaze ?? 1,
+      hold: options.hold ?? 1400
+    };
+  }
+
+  // Every pose keeps the original pill artwork and changes only its transform.
+  // The collection distils the eye language from the supplied reference sheet
+  // into shapes that stay legible without adding pupils, brows, lids, or tears.
+  const CURSOR_FACE_EXPRESSIONS = {
+    neutral: createCursorFaceExpression({}, {}),
+    alert: createCursorFaceExpression(
+      { x: -3, scaleX: 1.08, scaleY: 1.16 },
+      { x: 3, scaleX: 1.08, scaleY: 1.16 },
+      { gaze: 0.82, hold: 1250 }
+    ),
+    wink: createCursorFaceExpression(
+      { x: 1, y: 4, rotation: -9, scaleX: 1.34, scaleY: 0.08 },
+      { x: -2, y: -1, rotation: -4, scaleX: 1.04, scaleY: 1.08 },
+      { gaze: 0.62, hold: 900 }
+    ),
+    angry: createCursorFaceExpression(
+      { x: 2, y: 1, rotation: 19, scaleX: 1.08, scaleY: 0.78 },
+      { x: -2, y: 1, rotation: -19, scaleX: 1.08, scaleY: 0.78 },
+      { gaze: 0.46, hold: 1350 }
+    ),
+    worried: createCursorFaceExpression(
+      { x: 1, y: 2, rotation: -15, scaleX: 0.94, scaleY: 0.88 },
+      { x: -1, y: 2, rotation: 15, scaleX: 0.94, scaleY: 0.88 },
+      { gaze: 0.58, hold: 1550 }
+    ),
+    dizzy: createCursorFaceExpression(
+      { x: 7, y: -1, rotation: -38, scaleX: 1.2, scaleY: 0.72 },
+      { x: -7, y: 2, rotation: 38, scaleX: 1.2, scaleY: 0.72 },
+      { gaze: 0.12, hold: 1450 }
+    ),
+    weary: createCursorFaceExpression(
+      { x: -1, y: 4, rotation: 10, scaleX: 1.23, scaleY: 0.38 },
+      { x: 1, y: 4, rotation: -10, scaleX: 1.23, scaleY: 0.38 },
+      { gaze: 0.24, hold: 1700 }
+    ),
+    determined: createCursorFaceExpression(
+      { x: 2, y: 1, rotation: 13, scaleX: 0.96, scaleY: 0.94 },
+      { x: -2, y: 1, rotation: -13, scaleX: 0.96, scaleY: 0.94 },
+      { gaze: 0.68, hold: 1350 }
+    ),
+    curious: createCursorFaceExpression(
+      { x: -3, y: -4, rotation: -10, scaleX: 0.96, scaleY: 1.12 },
+      { x: 2, y: 3, rotation: -6, scaleX: 1.04, scaleY: 0.82 },
+      { gaze: 0.9, hold: 1500 }
+    ),
+    skeptical: createCursorFaceExpression(
+      { x: 1, y: 3, rotation: 12, scaleX: 1.18, scaleY: 0.42 },
+      { x: -1, y: -3, rotation: -7, scaleX: 0.95, scaleY: 1.06 },
+      { gaze: 0.5, hold: 1600 }
+    ),
+    pleading: createCursorFaceExpression(
+      { x: 2, y: 2, rotation: -12, scaleX: 1.08, scaleY: 1.08 },
+      { x: -2, y: 2, rotation: 12, scaleX: 1.08, scaleY: 1.08 },
+      { gaze: 0.42, hold: 1700 }
+    ),
+    delighted: createCursorFaceExpression(
+      { x: -1, y: 3, rotation: -12, scaleX: 1.3, scaleY: 0.18 },
+      { x: 1, y: 3, rotation: 12, scaleX: 1.3, scaleY: 0.18 },
+      { gaze: 0.16, hold: 1150 }
+    ),
+    furious: createCursorFaceExpression(
+      { x: 5, y: 2, rotation: 27, scaleX: 1.12, scaleY: 0.58 },
+      { x: -5, y: 2, rotation: -27, scaleX: 1.12, scaleY: 0.58 },
+      { gaze: 0.3, hold: 1050 }
+    ),
+    tired: createCursorFaceExpression(
+      { x: -1, y: 5, rotation: 5, scaleX: 1.3, scaleY: 0.24 },
+      { x: 1, y: 5, rotation: -5, scaleX: 1.3, scaleY: 0.24 },
+      { gaze: 0.18, hold: 1900 }
+    ),
+    anxious: createCursorFaceExpression(
+      { x: 4, y: 1, rotation: 8, scaleX: 0.86, scaleY: 1.13 },
+      { x: -4, y: 2, rotation: -14, scaleX: 0.86, scaleY: 0.96 },
+      { gaze: 0.72, hold: 1200 }
+    ),
+    startled: createCursorFaceExpression(
+      { x: -6, y: -2, rotation: -5, scaleX: 1.18, scaleY: 1.27 },
+      { x: 6, y: -2, rotation: 5, scaleX: 1.18, scaleY: 1.27 },
+      { gaze: 0.26, hold: 650 }
+    ),
+    bashful: createCursorFaceExpression(
+      { x: 5, y: 5, rotation: 11, scaleX: 1.15, scaleY: 0.42 },
+      { x: 1, y: 5, rotation: 7, scaleX: 1.15, scaleY: 0.42 },
+      { gaze: 0.34, hold: 1450 }
+    ),
+    sideEye: createCursorFaceExpression(
+      { x: 7, y: 2, rotation: 7, scaleX: 1.04, scaleY: 0.74 },
+      { x: 7, y: 2, rotation: 7, scaleX: 1.04, scaleY: 0.74 },
+      { gaze: 0.15, hold: 1450 }
+    ),
+    sad: createCursorFaceExpression(
+      { x: 2, y: 4, rotation: -18, scaleX: 1.04, scaleY: 0.68 },
+      { x: -2, y: 4, rotation: 18, scaleX: 1.04, scaleY: 0.68 },
+      { gaze: 0.32, hold: 1750 }
+    ),
+    sly: createCursorFaceExpression(
+      { x: 4, y: 2, rotation: -8, scaleX: 1.17, scaleY: 0.36 },
+      { x: 4, y: -1, rotation: -8, scaleX: 0.93, scaleY: 0.9 },
+      { gaze: 0.28, hold: 1300 }
+    ),
+    overwhelmed: createCursorFaceExpression(
+      { x: 2, y: 5, rotation: -10, scaleX: 0.92, scaleY: 0.5 },
+      { x: -2, y: 5, rotation: 10, scaleX: 0.92, scaleY: 0.5 },
+      { gaze: 0.2, hold: 1800 }
+    ),
+    dejected: createCursorFaceExpression(
+      { x: 3, y: 6, rotation: -22, scaleX: 1.06, scaleY: 0.48 },
+      { x: -3, y: 6, rotation: 22, scaleX: 1.06, scaleY: 0.48 },
+      { gaze: 0.18, hold: 1800 }
+    ),
+    bored: createCursorFaceExpression(
+      { x: -1, y: 4, rotation: 3, scaleX: 1.28, scaleY: 0.3 },
+      { x: 1, y: 4, rotation: -3, scaleX: 1.28, scaleY: 0.3 },
+      { gaze: 0.16, hold: 1750 }
+    ),
+    exhausted: createCursorFaceExpression(
+      { x: 1, y: 6, rotation: 14, scaleX: 1.24, scaleY: 0.12 },
+      { x: -1, y: 6, rotation: -14, scaleX: 1.24, scaleY: 0.12 },
+      { gaze: 0.08, hold: 1900 }
+    )
+  };
+
+  const CURSOR_FACE_EXPRESSION_DYNAMICS = {
+    neutral: { response: 0.072, damping: 0.76, lag: 18, organic: 0.16 },
+    alert: { response: 0.12, damping: 0.66, lag: 34, organic: 0.42 },
+    wink: { response: 0.17, damping: 0.59, lag: 52, lead: 'left', organic: 0.34 },
+    angry: { response: 0.105, damping: 0.7, lag: 28, organic: 0.38 },
+    worried: { response: 0.078, damping: 0.77, lag: 48, organic: 0.5 },
+    dizzy: { response: 0.1, damping: 0.7, lag: 76, organic: 1 },
+    weary: { response: 0.06, damping: 0.82, lag: 72, organic: 0.3 },
+    determined: { response: 0.1, damping: 0.71, lag: 26, organic: 0.3 },
+    curious: { response: 0.082, damping: 0.76, lag: 68, lead: 'right', organic: 0.55 },
+    skeptical: { response: 0.092, damping: 0.73, lag: 86, lead: 'right', organic: 0.45 },
+    pleading: { response: 0.075, damping: 0.78, lag: 42, organic: 0.42 },
+    delighted: { response: 0.13, damping: 0.65, lag: 38, organic: 0.56 },
+    furious: { response: 0.14, damping: 0.63, lag: 20, organic: 0.58 },
+    tired: { response: 0.052, damping: 0.84, lag: 82, organic: 0.24 },
+    anxious: { response: 0.13, damping: 0.64, lag: 58, organic: 0.9 },
+    startled: { response: 0.2, damping: 0.56, lag: 0, organic: 1 },
+    bashful: { response: 0.08, damping: 0.77, lag: 62, lead: 'left', organic: 0.42 },
+    sideEye: { response: 0.135, damping: 0.64, lag: 30, organic: 0.46 },
+    sad: { response: 0.068, damping: 0.8, lag: 54, organic: 0.3 },
+    sly: { response: 0.1, damping: 0.7, lag: 70, lead: 'right', organic: 0.46 },
+    overwhelmed: { response: 0.082, damping: 0.75, lag: 54, organic: 0.72 },
+    dejected: { response: 0.06, damping: 0.83, lag: 66, organic: 0.24 },
+    bored: { response: 0.056, damping: 0.83, lag: 76, organic: 0.22 },
+    exhausted: { response: 0.048, damping: 0.85, lag: 90, organic: 0.18 }
+  };
+
+  // Human expressions arrive in beats: notice, react, reconsider, then settle.
+  // These routines also keep the stronger emotions from appearing as unrelated
+  // random poses, which makes the mascot feel playful instead of erratic.
+  const AUTONOMOUS_CURSOR_FACE_ROUTINES = [
+    [
+      { name: 'alert', duration: 380 },
+      { name: 'curious', duration: 1150 },
+      { name: 'sideEye', duration: 680 }
+    ],
+    [
+      { name: 'skeptical', duration: 880 },
+      { name: 'wink', duration: 620 },
+      { name: 'delighted', duration: 920 }
+    ],
+    [
+      { name: 'determined', duration: 720 },
+      { name: 'angry', duration: 760 },
+      { name: 'furious', duration: 520 },
+      { name: 'weary', duration: 820 }
+    ],
+    [
+      { name: 'worried', duration: 880 },
+      { name: 'anxious', duration: 640 },
+      { name: 'overwhelmed', duration: 980 },
+      { name: 'dejected', duration: 760 }
+    ],
+    [
+      { name: 'bored', duration: 980 },
+      { name: 'tired', duration: 1080 },
+      { name: 'exhausted', duration: 980 }
+    ],
+    [
+      { name: 'startled', duration: 340 },
+      { name: 'dizzy', duration: 1050 },
+      { name: 'bashful', duration: 900 }
+    ],
+    [
+      { name: 'alert', duration: 300 },
+      { name: 'sly', duration: 820 },
+      { name: 'delighted', duration: 860 }
+    ],
+    [
+      { name: 'pleading', duration: 1050 },
+      { name: 'sad', duration: 980 },
+      { name: 'dejected', duration: 720 }
+    ]
+  ];
+
+  const CONTACT_CURSOR_FACE_ROUTINES = [
+    [
+      { name: 'startled', duration: 360 },
+      { name: 'skeptical', duration: 680 },
+      { name: 'wink', duration: 560 },
+      { name: 'delighted', duration: 760 }
+    ],
+    [
+      { name: 'startled', duration: 340 },
+      { name: 'angry', duration: 460 },
+      { name: 'sly', duration: 720 },
+      { name: 'bashful', duration: 760 }
+    ],
+    [
+      { name: 'startled', duration: 350 },
+      { name: 'dizzy', duration: 780 },
+      { name: 'anxious', duration: 520 },
+      { name: 'delighted', duration: 720 }
+    ],
+    [
+      { name: 'startled', duration: 330 },
+      { name: 'curious', duration: 780 },
+      { name: 'sideEye', duration: 560 },
+      { name: 'wink', duration: 620 }
+    ]
+  ];
+
+  const CONTINUED_CONTACT_CURSOR_FACE_ROUTINES = [
+    [{ name: 'curious', duration: 620 }, { name: 'wink', duration: 540 }],
+    [{ name: 'skeptical', duration: 620 }, { name: 'sideEye', duration: 580 }],
+    [{ name: 'determined', duration: 460 }, { name: 'delighted', duration: 680 }],
+    [{ name: 'dizzy', duration: 620 }, { name: 'bashful', duration: 680 }]
+  ];
+  const CURSOR_FACE_POSE_PROPERTIES = ['x', 'y', 'rotation', 'scaleX', 'scaleY'];
+  const neutralCursorFaceExpression = CURSOR_FACE_EXPRESSIONS.neutral;
+
   const faceMotion = {
     targetX: 0,
     targetY: 0,
@@ -55,8 +312,37 @@ if (!reducedMotionPreference.matches) {
     previousFrameTime: null,
     previousPointerX: null,
     previousPointerY: null,
-    previousPointerTime: null
+    previousPointerTime: null,
+    expression: {
+      name: 'neutral',
+      current: {
+        left: createCursorFaceEyePose(),
+        right: createCursorFaceEyePose(),
+        gaze: 1
+      },
+      velocity: {
+        left: createCursorFaceEyeVelocity(),
+        right: createCursorFaceEyeVelocity(),
+        gaze: 0
+      },
+      target: {
+        left: neutralCursorFaceExpression.left,
+        right: neutralCursorFaceExpression.right,
+        gaze: neutralCursorFaceExpression.gaze
+      },
+      startedAt: performance.now(),
+      activeUntil: 0,
+      gestureId: 0
+    }
   };
+
+  let autonomousExpressionTimerId = null;
+  let expressionSequenceTimerId = null;
+  let expressionEyeLagTimerId = null;
+  let previousAutonomousRoutineIndex = -1;
+  let previousContactRoutineIndex = -1;
+  let isPointerTouchingFace = false;
+  let nextContactExpressionTime = 0;
 
   function clampFaceMotion(value) {
     return Math.max(-1, Math.min(1, value));
@@ -69,6 +355,286 @@ if (!reducedMotionPreference.matches) {
     state.velocityY *= damping ** frameScale;
     state.x += state.velocityX * frameScale;
     state.y += state.velocityY * frameScale;
+  }
+
+  function updateCursorFaceExpression(frameScale) {
+    const expressionMotion = faceMotion.expression;
+    const { current, target, velocity } = expressionMotion;
+    const dynamics = CURSOR_FACE_EXPRESSION_DYNAMICS[expressionMotion.name]
+      ?? CURSOR_FACE_EXPRESSION_DYNAMICS.neutral;
+    const responseByProperty = {
+      x: 1,
+      y: 1,
+      rotation: 0.72,
+      scaleX: 0.9,
+      scaleY: 1.12
+    };
+
+    ['left', 'right'].forEach((eye) => {
+      CURSOR_FACE_POSE_PROPERTIES.forEach((property) => {
+        velocity[eye][property] += (
+          (target[eye][property] - current[eye][property])
+          * dynamics.response
+          * responseByProperty[property]
+          * frameScale
+        );
+        velocity[eye][property] *= dynamics.damping ** frameScale;
+        current[eye][property] += velocity[eye][property] * frameScale;
+      });
+
+      current[eye].scaleX = Math.max(0.72, Math.min(1.46, current[eye].scaleX));
+      current[eye].scaleY = Math.max(0.045, Math.min(1.42, current[eye].scaleY));
+    });
+
+    velocity.gaze += (target.gaze - current.gaze) * dynamics.response * 0.7 * frameScale;
+    velocity.gaze *= (dynamics.damping + 0.04) ** frameScale;
+    current.gaze += velocity.gaze * frameScale;
+    current.gaze = Math.max(0.04, Math.min(1, current.gaze));
+  }
+
+  function isCursorFaceExpressionSettled() {
+    const { current, target, velocity } = faceMotion.expression;
+    const eyesAreSettled = ['left', 'right'].every((eye) => (
+      CURSOR_FACE_POSE_PROPERTIES.every((property) => (
+        Math.abs(current[eye][property] - target[eye][property]) < 0.002
+        && Math.abs(velocity[eye][property]) < 0.002
+      ))
+    ));
+
+    return eyesAreSettled
+      && Math.abs(current.gaze - target.gaze) < 0.002
+      && Math.abs(velocity.gaze) < 0.002;
+  }
+
+  function setCursorFaceExpression(name, activeDuration = 700) {
+    const expression = CURSOR_FACE_EXPRESSIONS[name] ?? neutralCursorFaceExpression;
+    const expressionName = name in CURSOR_FACE_EXPRESSIONS ? name : 'neutral';
+    const dynamics = CURSOR_FACE_EXPRESSION_DYNAMICS[expressionName]
+      ?? CURSOR_FACE_EXPRESSION_DYNAMICS.neutral;
+    const expressionMotion = faceMotion.expression;
+    const now = performance.now();
+
+    window.clearTimeout(expressionEyeLagTimerId);
+    expressionMotion.gestureId += 1;
+    expressionMotion.name = expressionName;
+    expressionMotion.startedAt = now;
+    expressionMotion.activeUntil = now + activeDuration;
+    expressionMotion.target.gaze = expression.gaze;
+
+    ['left', 'right'].forEach((eye) => {
+      CURSOR_FACE_POSE_PROPERTIES.forEach((property) => {
+        expressionMotion.velocity[eye][property] *= 0.52;
+      });
+    });
+    expressionMotion.velocity.gaze *= 0.52;
+
+    const leadingEye = dynamics.lead
+      ?? (expressionMotion.gestureId % 2 === 0 ? 'left' : 'right');
+    const delayedEye = leadingEye === 'left' ? 'right' : 'left';
+    expressionMotion.target[leadingEye] = expression[leadingEye];
+
+    if (dynamics.lag > 0) {
+      expressionMotion.target[delayedEye] = {
+        ...expressionMotion.current[delayedEye]
+      };
+      const gestureId = expressionMotion.gestureId;
+
+      expressionEyeLagTimerId = window.setTimeout(() => {
+        if (faceMotion.expression.gestureId !== gestureId) return;
+        faceMotion.expression.target[delayedEye] = expression[delayedEye];
+        startCursorFaceMotion();
+      }, dynamics.lag);
+    } else {
+      expressionMotion.target[delayedEye] = expression[delayedEye];
+    }
+
+    cursorFace.dataset.expression = expressionName;
+    startCursorFaceMotion();
+  }
+
+  function getRandomRoutineIndex(routines, excludedIndex) {
+    if (routines.length < 2) return 0;
+
+    let routineIndex = Math.floor(Math.random() * routines.length);
+    while (routineIndex === excludedIndex) {
+      routineIndex = Math.floor(Math.random() * routines.length);
+    }
+    return routineIndex;
+  }
+
+  function clearCursorFaceExpressionTimers() {
+    window.clearTimeout(autonomousExpressionTimerId);
+    window.clearTimeout(expressionSequenceTimerId);
+    window.clearTimeout(expressionEyeLagTimerId);
+  }
+
+  function playCursorFaceRoutine(routine, beatIndex = 0, onComplete) {
+    const beat = routine[beatIndex];
+    if (!beat) {
+      onComplete?.();
+      return;
+    }
+
+    setCursorFaceExpression(beat.name, beat.duration);
+    expressionSequenceTimerId = window.setTimeout(() => {
+      playCursorFaceRoutine(routine, beatIndex + 1, onComplete);
+    }, beat.duration);
+  }
+
+  function scheduleAutonomousCursorFaceExpression(delay = 2800 + Math.random() * 3200) {
+    window.clearTimeout(autonomousExpressionTimerId);
+    autonomousExpressionTimerId = window.setTimeout(() => {
+      if (document.hidden || isPointerTouchingFace) {
+        scheduleAutonomousCursorFaceExpression();
+        return;
+      }
+
+      const routineIndex = getRandomRoutineIndex(
+        AUTONOMOUS_CURSOR_FACE_ROUTINES,
+        previousAutonomousRoutineIndex
+      );
+      previousAutonomousRoutineIndex = routineIndex;
+      playCursorFaceRoutine(AUTONOMOUS_CURSOR_FACE_ROUTINES[routineIndex], 0, () => {
+        setCursorFaceExpression('neutral', 520);
+        expressionSequenceTimerId = window.setTimeout(() => {
+          scheduleAutonomousCursorFaceExpression(2500 + Math.random() * 3200);
+        }, 520);
+      });
+    }, delay);
+  }
+
+  function playCursorFaceContactReaction(now, isInitialContact) {
+    clearCursorFaceExpressionTimers();
+    const routines = isInitialContact
+      ? CONTACT_CURSOR_FACE_ROUTINES
+      : CONTINUED_CONTACT_CURSOR_FACE_ROUTINES;
+    const routineIndex = getRandomRoutineIndex(routines, previousContactRoutineIndex);
+    const routine = routines[routineIndex];
+    const routineDuration = routine.reduce((duration, beat) => duration + beat.duration, 0);
+    previousContactRoutineIndex = routineIndex;
+    nextContactExpressionTime = now + routineDuration + 800;
+
+    playCursorFaceRoutine(routine, 0, () => {
+      if (!isPointerTouchingFace) return;
+      setCursorFaceExpression('neutral', 520);
+      nextContactExpressionTime = performance.now() + 800 + Math.random() * 500;
+    });
+  }
+
+  function updateCursorFaceContact(event, faceBounds) {
+    const centerX = faceBounds.left + faceBounds.width / 2;
+    const centerY = faceBounds.top + faceBounds.height / 2;
+    const radius = Math.min(faceBounds.width, faceBounds.height) * 0.49;
+    const isTouching = Math.hypot(event.clientX - centerX, event.clientY - centerY) <= radius;
+    const now = event.timeStamp || performance.now();
+
+    if (isTouching && !isPointerTouchingFace) {
+      isPointerTouchingFace = true;
+      playCursorFaceContactReaction(now, true);
+      return;
+    }
+
+    if (isTouching && now >= nextContactExpressionTime) {
+      playCursorFaceContactReaction(now, false);
+      return;
+    }
+
+    if (!isTouching && isPointerTouchingFace) {
+      isPointerTouchingFace = false;
+      clearCursorFaceExpressionTimers();
+      setCursorFaceExpression('neutral', 560);
+      scheduleAutonomousCursorFaceExpression(2200 + Math.random() * 2400);
+    }
+  }
+
+  function getCursorFaceSaccadeValue(elapsed, phase, interval) {
+    const segment = elapsed / interval;
+    const segmentIndex = Math.floor(segment);
+    const segmentProgress = segment - segmentIndex;
+    const valueAt = (index) => Math.sin((index + phase) * 12.9898 + phase * 37.719);
+    const from = valueAt(segmentIndex);
+    const to = valueAt(segmentIndex + 1);
+    const movementProgress = Math.min(1, segmentProgress / 0.14);
+    const easedProgress = 1 - (1 - movementProgress) ** 3;
+
+    return from + (to - from) * easedProgress;
+  }
+
+  function getCursorFaceOrganicMotion(now) {
+    const expressionMotion = faceMotion.expression;
+    const dynamics = CURSOR_FACE_EXPRESSION_DYNAMICS[expressionMotion.name]
+      ?? CURSOR_FACE_EXPRESSION_DYNAMICS.neutral;
+    const elapsed = Math.max(0, now - expressionMotion.startedAt);
+    const phase = expressionMotion.gestureId * 0.731;
+    const isActive = now < expressionMotion.activeUntil;
+    const intensity = isActive ? dynamics.organic : 0;
+    const horizontalSaccade = getCursorFaceSaccadeValue(elapsed, phase, 620);
+    const verticalSaccade = getCursorFaceSaccadeValue(elapsed, phase + 2.17, 790);
+    const slowSettle = Math.sin(elapsed * 0.0052 + phase) * 0.18 * intensity;
+    const organicMotion = {
+      left: {
+        x: horizontalSaccade * 0.42 * intensity,
+        y: verticalSaccade * 0.22 * intensity + slowSettle,
+        rotation: horizontalSaccade * 0.38 * intensity,
+        scaleX: 0,
+        scaleY: Math.sin(elapsed * 0.007 + phase) * 0.008 * intensity
+      },
+      right: {
+        x: horizontalSaccade * 0.36 * intensity,
+        y: verticalSaccade * 0.19 * intensity + slowSettle * 0.82,
+        rotation: horizontalSaccade * 0.31 * intensity,
+        scaleX: 0,
+        scaleY: Math.sin(elapsed * 0.0064 + phase + 0.4) * 0.007 * intensity
+      }
+    };
+
+    if (expressionMotion.name === 'startled') {
+      const recoil = Math.exp(-elapsed / 260);
+      const tremble = Math.sin(elapsed * 0.13) * 1.35 * recoil;
+      organicMotion.left.x += tremble;
+      organicMotion.right.x -= tremble;
+      organicMotion.left.y -= Math.abs(tremble) * 0.28;
+      organicMotion.right.y -= Math.abs(tremble) * 0.24;
+      organicMotion.left.rotation += tremble * 1.25;
+      organicMotion.right.rotation -= tremble * 1.25;
+    }
+
+    if (expressionMotion.name === 'dizzy') {
+      const sway = Math.sin(elapsed * 0.013 + phase);
+      organicMotion.left.x += sway * 1.2;
+      organicMotion.right.x -= sway * 1.2;
+      organicMotion.left.y += Math.cos(elapsed * 0.011) * 0.65;
+      organicMotion.right.y -= Math.cos(elapsed * 0.011) * 0.65;
+      organicMotion.left.rotation += sway * 3.1;
+      organicMotion.right.rotation += sway * 3.1;
+    }
+
+    if (expressionMotion.name === 'anxious' || expressionMotion.name === 'overwhelmed') {
+      const nervousTremble = Math.sin(elapsed * 0.09 + phase) * 0.42 * intensity;
+      organicMotion.left.x += nervousTremble;
+      organicMotion.right.x += nervousTremble * 0.78;
+    }
+
+    if (expressionMotion.name === 'delighted') {
+      const happyBounce = Math.sin(elapsed * 0.014) * 0.28;
+      organicMotion.left.y -= happyBounce;
+      organicMotion.right.y -= happyBounce * 0.9;
+      organicMotion.left.rotation -= happyBounce * 1.4;
+      organicMotion.right.rotation += happyBounce * 1.4;
+    }
+
+    if (['weary', 'tired', 'bored', 'exhausted'].includes(expressionMotion.name)) {
+      const sleepyDrift = (1 - Math.cos(elapsed * 0.0032)) * 0.24;
+      organicMotion.left.y += sleepyDrift;
+      organicMotion.right.y += sleepyDrift * 0.88;
+    }
+
+    if (expressionMotion.name === 'sideEye' || expressionMotion.name === 'sly') {
+      organicMotion.left.x += horizontalSaccade * 0.48;
+      organicMotion.right.x += horizontalSaccade * 0.42;
+    }
+
+    return organicMotion;
   }
 
   function getCursorGaze(cursorX, cursorY, originX, originY, responseRadius) {
@@ -114,6 +680,7 @@ if (!reducedMotionPreference.matches) {
       0.67,
       frameScale
     );
+    updateCursorFaceExpression(frameScale);
 
     const headDistance = Math.min(1, Math.hypot(faceMotion.head.x, faceMotion.head.y));
     const headVelocity = Math.hypot(faceMotion.head.velocityX, faceMotion.head.velocityY);
@@ -122,9 +689,16 @@ if (!reducedMotionPreference.matches) {
     const renderedRightX = clampFaceMotion(faceMotion.rightEye.x + faceMotion.rightEye.velocityX * 0.68);
     const renderedRightY = clampFaceMotion(faceMotion.rightEye.y + faceMotion.rightEye.velocityY * 0.68);
 
+    const expressionPose = faceMotion.expression.current;
+    const organicMotion = getCursorFaceOrganicMotion(now);
+    const leftGazeX = renderedLeftX * 36 * expressionPose.gaze;
+    const leftGazeY = renderedLeftY * 33 * expressionPose.gaze;
+    const rightGazeX = renderedRightX * 39 * expressionPose.gaze;
+    const rightGazeY = renderedRightY * 35 * expressionPose.gaze;
+
     cursorFaceAsset.style.transform = `translate(${faceMotion.head.x * 4}px, ${faceMotion.head.y * 4}px) rotate(${faceMotion.head.x * 3.8}deg) scale(${1 + headDistance * 0.008 + headVelocity * 0.035}, ${1 - headDistance * 0.006 + headVelocity * 0.018})`;
-    cursorFaceLeftEye.style.transform = `translate(${renderedLeftX * 36}px, ${renderedLeftY * 33}px) rotate(${renderedLeftX * 15 - renderedLeftY * 3}deg)`;
-    cursorFaceRightEye.style.transform = `translate(${renderedRightX * 39}px, ${renderedRightY * 35}px) rotate(${renderedRightX * 18 + renderedRightY * 3}deg)`;
+    cursorFaceLeftEye.style.transform = `translate(${leftGazeX + expressionPose.left.x + organicMotion.left.x}px, ${leftGazeY + expressionPose.left.y + organicMotion.left.y}px) rotate(${renderedLeftX * 15 - renderedLeftY * 3 + expressionPose.left.rotation + organicMotion.left.rotation}deg) scale(${expressionPose.left.scaleX + organicMotion.left.scaleX}, ${Math.max(0.045, expressionPose.left.scaleY + organicMotion.left.scaleY)})`;
+    cursorFaceRightEye.style.transform = `translate(${rightGazeX + expressionPose.right.x + organicMotion.right.x}px, ${rightGazeY + expressionPose.right.y + organicMotion.right.y}px) rotate(${renderedRightX * 18 + renderedRightY * 3 + expressionPose.right.rotation + organicMotion.right.rotation}deg) scale(${expressionPose.right.scaleX + organicMotion.right.scaleX}, ${Math.max(0.045, expressionPose.right.scaleY + organicMotion.right.scaleY)})`;
 
     const springs = [faceMotion.head, faceMotion.leftEye, faceMotion.rightEye];
     const isSettled = Math.abs(faceMotion.head.x - faceMotion.targetX) < 0.001
@@ -135,7 +709,9 @@ if (!reducedMotionPreference.matches) {
       && Math.abs(faceMotion.rightEye.y - faceMotion.rightEye.targetY) < 0.001
       && springs.every((spring) => (
         Math.abs(spring.velocityX) < 0.0005 && Math.abs(spring.velocityY) < 0.0005
-      ));
+      ))
+      && isCursorFaceExpressionSettled()
+      && now >= faceMotion.expression.activeUntil;
 
     if (isSettled) {
       faceMotion.frameId = null;
@@ -154,6 +730,7 @@ if (!reducedMotionPreference.matches) {
 
   window.addEventListener('pointermove', (event) => {
     const faceBounds = cursorFace.getBoundingClientRect();
+    updateCursorFaceContact(event, faceBounds);
     const centerX = faceBounds.left + faceBounds.width / 2;
     const centerY = faceBounds.top + faceBounds.height / 2;
     const leftEyeCenterX = faceBounds.left + faceBounds.width * (51.525 / 135);
@@ -214,6 +791,10 @@ if (!reducedMotionPreference.matches) {
   }, { passive: true });
 
   document.documentElement.addEventListener('mouseleave', () => {
+    clearCursorFaceExpressionTimers();
+    isPointerTouchingFace = false;
+    setCursorFaceExpression('neutral');
+    scheduleAutonomousCursorFaceExpression(1600 + Math.random() * 1800);
     faceMotion.targetX = 0;
     faceMotion.targetY = 0;
     faceMotion.leftEye.targetX = 0;
@@ -227,6 +808,18 @@ if (!reducedMotionPreference.matches) {
   });
 
   let blinkTimerId = null;
+  let cursorFaceBlinkEndHandler = null;
+  const CURSOR_FACE_BLINK_SUPPRESSED_EXPRESSIONS = new Set([
+    'wink', 'delighted', 'weary', 'tired', 'bored', 'exhausted'
+  ]);
+
+  function stopCursorFaceBlink() {
+    if (cursorFaceBlinkEndHandler) {
+      cursorFaceBlink.removeEventListener('animationend', cursorFaceBlinkEndHandler);
+      cursorFaceBlinkEndHandler = null;
+    }
+    cursorFaceBlink.classList.remove('is-blinking');
+  }
 
   function scheduleCursorFaceBlink(delay = 2400 + Math.random() * 4200) {
     window.clearTimeout(blinkTimerId);
@@ -239,8 +832,24 @@ if (!reducedMotionPreference.matches) {
       return;
     }
 
+    if (CURSOR_FACE_BLINK_SUPPRESSED_EXPRESSIONS.has(faceMotion.expression.name)) {
+      scheduleCursorFaceBlink(650 + Math.random() * 850);
+      return;
+    }
+
+    const isReflectiveExpression = ['worried', 'sad', 'dejected'].includes(
+      faceMotion.expression.name
+    );
+    const blinkDuration = isReflectiveExpression && Math.random() < 0.45
+      ? 225 + Math.random() * 55
+      : 155 + Math.random() * 55;
+    cursorFaceBlink.style.setProperty('--cursor-face-blink-duration', `${blinkDuration}ms`);
+
+    stopCursorFaceBlink();
     cursorFaceBlink.classList.add('is-blinking');
-    cursorFaceBlink.addEventListener('animationend', () => {
+    cursorFaceBlinkEndHandler = () => {
+      cursorFaceBlink.removeEventListener('animationend', cursorFaceBlinkEndHandler);
+      cursorFaceBlinkEndHandler = null;
       cursorFaceBlink.classList.remove('is-blinking');
 
       if (canDoubleBlink && Math.random() < 0.18) {
@@ -249,18 +858,25 @@ if (!reducedMotionPreference.matches) {
       }
 
       scheduleCursorFaceBlink();
-    }, { once: true });
+    };
+    cursorFaceBlink.addEventListener('animationend', cursorFaceBlinkEndHandler);
   }
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       window.clearTimeout(blinkTimerId);
+      clearCursorFaceExpressionTimers();
+      stopCursorFaceBlink();
       return;
     }
 
+    setCursorFaceExpression('neutral');
+    scheduleAutonomousCursorFaceExpression(1200 + Math.random() * 1800);
     scheduleCursorFaceBlink(900 + Math.random() * 1800);
   });
 
+  cursorFace.dataset.expression = 'neutral';
+  scheduleAutonomousCursorFaceExpression(1800 + Math.random() * 2200);
   scheduleCursorFaceBlink(1600 + Math.random() * 1800);
 }
 

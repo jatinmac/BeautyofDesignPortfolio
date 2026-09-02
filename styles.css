@@ -1006,6 +1006,55 @@ body.is-card-transitioning .detail-page {
   margin-bottom: 26px;
   overflow: visible;
   pointer-events: none;
+  transform-origin: center bottom;
+  will-change: transform;
+  animation: cursor-face-idle-life 5.6s linear infinite;
+}
+
+@keyframes cursor-face-idle-life {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+
+  14% {
+    transform: translate3d(1px, -2px, 0) rotate(0.45deg) scale(1);
+  }
+
+  28% {
+    transform: translate3d(0, -1px, 0) rotate(-0.3deg) scale(1);
+  }
+
+  40% {
+    transform: translate3d(-1px, 0, 0) rotate(0deg) scale(1);
+  }
+
+  46% {
+    transform: translate3d(0, 1px, 0) rotate(0deg) scale(1.016, 0.984);
+  }
+
+  53% {
+    transform: translate3d(0, -7px, 0) rotate(-0.55deg) scale(0.992, 1.012);
+  }
+
+  58% {
+    transform: translate3d(0, -8px, 0) rotate(0.3deg) scale(1);
+  }
+
+  64% {
+    transform: translate3d(0, 1px, 0) rotate(0deg) scale(1.022, 0.978);
+  }
+
+  70% {
+    transform: translate3d(0, -2px, 0) rotate(-0.18deg) scale(0.997, 1.005);
+  }
+
+  77% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+
+  89% {
+    transform: translate3d(-1px, -1px, 0) rotate(-0.35deg) scale(1);
+  }
 }
 
 .cursor-face__svg {
@@ -1027,9 +1076,12 @@ body.is-card-transitioning .detail-page {
   transform-origin: center;
 }
 
-.cursor-face__eyes,
-.cursor-face__eye {
+.cursor-face__eyes {
   will-change: transform;
+}
+
+.cursor-face__eye {
+  will-change: transform, opacity;
 }
 
 .cursor-face__blink {
@@ -2934,6 +2986,10 @@ body.is-card-transitioning .detail-page {
   }
 
   .cursor-face__blink.is-blinking {
+    animation: none;
+  }
+
+  .cursor-face {
     animation: none;
   }
 

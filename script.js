@@ -188,6 +188,11 @@ if (!reducedMotionPreference.matches) {
       { x: 1, y: 6, rotation: 14, scaleX: 1.24, scaleY: 0.12 },
       { x: -1, y: 6, rotation: -14, scaleX: 1.24, scaleY: 0.12 },
       { gaze: 0.08, hold: 1900 }
+    ),
+    spin: createCursorFaceExpression(
+      {},
+      {},
+      { gaze: 0.12, hold: 1700 }
     )
   };
 
@@ -215,7 +220,8 @@ if (!reducedMotionPreference.matches) {
     overwhelmed: { response: 0.082, damping: 0.75, lag: 54, organic: 0.72 },
     dejected: { response: 0.06, damping: 0.83, lag: 66, organic: 0.24 },
     bored: { response: 0.056, damping: 0.83, lag: 76, organic: 0.22 },
-    exhausted: { response: 0.048, damping: 0.85, lag: 90, organic: 0.18 }
+    exhausted: { response: 0.048, damping: 0.85, lag: 90, organic: 0.18 },
+    spin: { response: 0.12, damping: 0.68, lag: 0, organic: 0.12 }
   };
 
   // Human expressions arrive in beats: notice, react, reconsider, then settle.
@@ -263,6 +269,11 @@ if (!reducedMotionPreference.matches) {
       { name: 'pleading', duration: 1050 },
       { name: 'sad', duration: 980 },
       { name: 'dejected', duration: 720 }
+    ],
+    [
+      { name: 'alert', duration: 280 },
+      { name: 'spin', duration: 1700 },
+      { name: 'delighted', duration: 760 }
     ]
   ];
 
@@ -290,6 +301,11 @@ if (!reducedMotionPreference.matches) {
       { name: 'curious', duration: 780 },
       { name: 'sideEye', duration: 560 },
       { name: 'wink', duration: 620 }
+    ],
+    [
+      { name: 'startled', duration: 300 },
+      { name: 'spin', duration: 1600 },
+      { name: 'delighted', duration: 720 }
     ]
   ];
 
@@ -300,6 +316,10 @@ if (!reducedMotionPreference.matches) {
     [{ name: 'dizzy', duration: 620 }, { name: 'bashful', duration: 680 }]
   ];
   const CURSOR_FACE_POSE_PROPERTIES = ['x', 'y', 'rotation', 'scaleX', 'scaleY'];
+  const CURSOR_FACE_CENTER_X = 67.0587;
+  const CURSOR_FACE_LEFT_EYE_CENTER_X = 51.525;
+  const CURSOR_FACE_RIGHT_EYE_CENTER_X = 83.525;
+  const CURSOR_FACE_EYE_ORBIT_RADIUS = 63;
   const neutralCursorFaceExpression = CURSOR_FACE_EXPRESSIONS.neutral;
 
   const faceMotion = {
@@ -333,6 +353,12 @@ if (!reducedMotionPreference.matches) {
       startedAt: performance.now(),
       activeUntil: 0,
       gestureId: 0
+    },
+    spin: {
+      active: false,
+      startedAt: 0,
+      duration: 1500,
+      direction: 1
     }
   };
 
@@ -341,6 +367,7 @@ if (!reducedMotionPreference.matches) {
   let expressionEyeLagTimerId = null;
   let previousAutonomousRoutineIndex = -1;
   let previousContactRoutineIndex = -1;
+  let shouldLeadWithSignatureSpin = true;
   let isPointerTouchingFace = false;
   let nextContactExpressionTime = 0;
 
@@ -355,6 +382,71 @@ if (!reducedMotionPreference.matches) {
     state.velocityY *= damping ** frameScale;
     state.x += state.velocityX * frameScale;
     state.y += state.velocityY * frameScale;
+  }
+
+  function smoothCursorFaceStep(edgeStart, edgeEnd, value) {
+    const progress = Math.max(0, Math.min(1, (value - edgeStart) / (edgeEnd - edgeStart)));
+    return progress * progress * (3 - 2 * progress);
+  }
+
+  function startCursorFaceSpin(activeDuration) {
+    const spinMotion = faceMotion.spin;
+
+    if (spinMotion.active) return;
+
+    spinMotion.active = true;
+    spinMotion.startedAt = performance.now();
+    spinMotion.duration = Math.max(900, activeDuration - 120);
+    spinMotion.direction *= -1;
+    cursorFace.dataset.spinning = 'true';
+    window.clearTimeout(blinkTimerId);
+    stopCursorFaceBlink();
+  }
+
+  function getCursorFaceSpinMotion(now) {
+    const spinMotion = faceMotion.spin;
+
+    if (!spinMotion.active) {
+      return { angle: 0, progress: 0, direction: spinMotion.direction };
+    }
+
+    const progress = Math.min(1, Math.max(0, (now - spinMotion.startedAt) / spinMotion.duration));
+    const easedProgress = progress * progress * (3 - 2 * progress);
+    const angle = spinMotion.direction * Math.PI * 2 * easedProgress;
+
+    if (progress >= 1) {
+      spinMotion.active = false;
+      delete cursorFace.dataset.spinning;
+      scheduleCursorFaceBlink(650 + Math.random() * 900);
+    }
+
+    return { angle, progress, direction: spinMotion.direction };
+  }
+
+  // Project each eye around a virtual sphere. Positive depth is the visible
+  // hemisphere; negative depth puts the artwork behind the opaque ball.
+  function getCursorFaceEyeSpinProjection(baseCenterX, localX, spinAngle) {
+    const baseOffset = baseCenterX - CURSOR_FACE_CENTER_X;
+    const surfaceOffset = Math.max(
+      -CURSOR_FACE_EYE_ORBIT_RADIUS * 0.92,
+      Math.min(CURSOR_FACE_EYE_ORBIT_RADIUS * 0.92, baseOffset + localX)
+    );
+    const longitude = Math.asin(surfaceOffset / CURSOR_FACE_EYE_ORBIT_RADIUS);
+    const rotatedLongitude = longitude + spinAngle;
+    const depth = Math.cos(rotatedLongitude);
+    const restingDepth = Math.cos(longitude);
+    const projectedOffset = Math.sin(rotatedLongitude) * CURSOR_FACE_EYE_ORBIT_RADIUS;
+    const visibility = smoothCursorFaceStep(0.015, 0.18, depth);
+    const foreshortening = Math.max(
+      0.035,
+      Math.min(1.08, Math.abs(depth) / Math.max(0.2, restingDepth))
+    );
+
+    return {
+      x: projectedOffset - baseOffset,
+      opacity: visibility,
+      scaleX: foreshortening
+    };
   }
 
   function updateCursorFaceExpression(frameScale) {
@@ -449,6 +541,11 @@ if (!reducedMotionPreference.matches) {
     }
 
     cursorFace.dataset.expression = expressionName;
+
+    if (expressionName === 'spin') {
+      startCursorFaceSpin(activeDuration);
+    }
+
     startCursorFaceMotion();
   }
 
@@ -489,10 +586,13 @@ if (!reducedMotionPreference.matches) {
         return;
       }
 
-      const routineIndex = getRandomRoutineIndex(
-        AUTONOMOUS_CURSOR_FACE_ROUTINES,
-        previousAutonomousRoutineIndex
-      );
+      const routineIndex = shouldLeadWithSignatureSpin
+        ? AUTONOMOUS_CURSOR_FACE_ROUTINES.length - 1
+        : getRandomRoutineIndex(
+          AUTONOMOUS_CURSOR_FACE_ROUTINES,
+          previousAutonomousRoutineIndex
+        );
+      shouldLeadWithSignatureSpin = false;
       previousAutonomousRoutineIndex = routineIndex;
       playCursorFaceRoutine(AUTONOMOUS_CURSOR_FACE_ROUTINES[routineIndex], 0, () => {
         setCursorFaceExpression('neutral', 520);
@@ -695,10 +795,31 @@ if (!reducedMotionPreference.matches) {
     const leftGazeY = renderedLeftY * 33 * expressionPose.gaze;
     const rightGazeX = renderedRightX * 39 * expressionPose.gaze;
     const rightGazeY = renderedRightY * 35 * expressionPose.gaze;
+    const leftLocalX = leftGazeX + expressionPose.left.x + organicMotion.left.x;
+    const rightLocalX = rightGazeX + expressionPose.right.x + organicMotion.right.x;
+    const spinMotion = getCursorFaceSpinMotion(now);
+    const leftSpinProjection = getCursorFaceEyeSpinProjection(
+      CURSOR_FACE_LEFT_EYE_CENTER_X,
+      leftLocalX,
+      spinMotion.angle
+    );
+    const rightSpinProjection = getCursorFaceEyeSpinProjection(
+      CURSOR_FACE_RIGHT_EYE_CENTER_X,
+      rightLocalX,
+      spinMotion.angle
+    );
+    const spinMomentum = Math.sin(spinMotion.progress * Math.PI);
+    const spinLean = spinMotion.direction * spinMomentum * 1.1;
+    const headScaleX = (1 + headDistance * 0.008 + headVelocity * 0.035)
+      * (1 - spinMomentum * 0.012);
+    const headScaleY = (1 - headDistance * 0.006 + headVelocity * 0.018)
+      * (1 + spinMomentum * 0.008);
 
-    cursorFaceAsset.style.transform = `translate(${faceMotion.head.x * 4}px, ${faceMotion.head.y * 4}px) rotate(${faceMotion.head.x * 3.8}deg) scale(${1 + headDistance * 0.008 + headVelocity * 0.035}, ${1 - headDistance * 0.006 + headVelocity * 0.018})`;
-    cursorFaceLeftEye.style.transform = `translate(${leftGazeX + expressionPose.left.x + organicMotion.left.x}px, ${leftGazeY + expressionPose.left.y + organicMotion.left.y}px) rotate(${renderedLeftX * 15 - renderedLeftY * 3 + expressionPose.left.rotation + organicMotion.left.rotation}deg) scale(${expressionPose.left.scaleX + organicMotion.left.scaleX}, ${Math.max(0.045, expressionPose.left.scaleY + organicMotion.left.scaleY)})`;
-    cursorFaceRightEye.style.transform = `translate(${rightGazeX + expressionPose.right.x + organicMotion.right.x}px, ${rightGazeY + expressionPose.right.y + organicMotion.right.y}px) rotate(${renderedRightX * 18 + renderedRightY * 3 + expressionPose.right.rotation + organicMotion.right.rotation}deg) scale(${expressionPose.right.scaleX + organicMotion.right.scaleX}, ${Math.max(0.045, expressionPose.right.scaleY + organicMotion.right.scaleY)})`;
+    cursorFaceAsset.style.transform = `translate(${faceMotion.head.x * 4}px, ${faceMotion.head.y * 4}px) rotate(${faceMotion.head.x * 3.8 + spinLean}deg) scale(${headScaleX}, ${headScaleY})`;
+    cursorFaceLeftEye.style.opacity = String(leftSpinProjection.opacity);
+    cursorFaceRightEye.style.opacity = String(rightSpinProjection.opacity);
+    cursorFaceLeftEye.style.transform = `translate(${leftSpinProjection.x}px, ${leftGazeY + expressionPose.left.y + organicMotion.left.y}px) rotate(${renderedLeftX * 15 - renderedLeftY * 3 + expressionPose.left.rotation + organicMotion.left.rotation}deg) scale(${(expressionPose.left.scaleX + organicMotion.left.scaleX) * leftSpinProjection.scaleX}, ${Math.max(0.045, expressionPose.left.scaleY + organicMotion.left.scaleY)})`;
+    cursorFaceRightEye.style.transform = `translate(${rightSpinProjection.x}px, ${rightGazeY + expressionPose.right.y + organicMotion.right.y}px) rotate(${renderedRightX * 18 + renderedRightY * 3 + expressionPose.right.rotation + organicMotion.right.rotation}deg) scale(${(expressionPose.right.scaleX + organicMotion.right.scaleX) * rightSpinProjection.scaleX}, ${Math.max(0.045, expressionPose.right.scaleY + organicMotion.right.scaleY)})`;
 
     const springs = [faceMotion.head, faceMotion.leftEye, faceMotion.rightEye];
     const isSettled = Math.abs(faceMotion.head.x - faceMotion.targetX) < 0.001
@@ -711,6 +832,7 @@ if (!reducedMotionPreference.matches) {
         Math.abs(spring.velocityX) < 0.0005 && Math.abs(spring.velocityY) < 0.0005
       ))
       && isCursorFaceExpressionSettled()
+      && !faceMotion.spin.active
       && now >= faceMotion.expression.activeUntil;
 
     if (isSettled) {
@@ -810,7 +932,7 @@ if (!reducedMotionPreference.matches) {
   let blinkTimerId = null;
   let cursorFaceBlinkEndHandler = null;
   const CURSOR_FACE_BLINK_SUPPRESSED_EXPRESSIONS = new Set([
-    'wink', 'delighted', 'weary', 'tired', 'bored', 'exhausted'
+    'wink', 'delighted', 'weary', 'tired', 'bored', 'exhausted', 'spin'
   ]);
 
   function stopCursorFaceBlink() {
@@ -832,7 +954,10 @@ if (!reducedMotionPreference.matches) {
       return;
     }
 
-    if (CURSOR_FACE_BLINK_SUPPRESSED_EXPRESSIONS.has(faceMotion.expression.name)) {
+    if (
+      faceMotion.spin.active
+      || CURSOR_FACE_BLINK_SUPPRESSED_EXPRESSIONS.has(faceMotion.expression.name)
+    ) {
       scheduleCursorFaceBlink(650 + Math.random() * 850);
       return;
     }

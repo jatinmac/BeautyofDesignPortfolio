@@ -850,7 +850,14 @@ if (!reducedMotionPreference.matches) {
     }
   }
 
-  window.addEventListener('pointermove', (event) => {
+  let pendingCursorFacePointerFrame = null;
+  let latestCursorFacePointer = null;
+
+  function updateCursorFaceFromPointer() {
+    pendingCursorFacePointerFrame = null;
+    const event = latestCursorFacePointer;
+    if (!event) return;
+
     const faceBounds = cursorFace.getBoundingClientRect();
     updateCursorFaceContact(event, faceBounds);
     const centerX = faceBounds.left + faceBounds.width / 2;
@@ -910,9 +917,26 @@ if (!reducedMotionPreference.matches) {
     faceMotion.previousPointerY = event.clientY;
     faceMotion.previousPointerTime = pointerTime;
     startCursorFaceMotion();
+  }
+
+  window.addEventListener('pointermove', (event) => {
+    latestCursorFacePointer = {
+      clientX: event.clientX,
+      clientY: event.clientY,
+      timeStamp: event.timeStamp
+    };
+
+    if (pendingCursorFacePointerFrame === null) {
+      pendingCursorFacePointerFrame = requestAnimationFrame(updateCursorFaceFromPointer);
+    }
   }, { passive: true });
 
   document.documentElement.addEventListener('mouseleave', () => {
+    latestCursorFacePointer = null;
+    if (pendingCursorFacePointerFrame !== null) {
+      cancelAnimationFrame(pendingCursorFacePointerFrame);
+      pendingCursorFacePointerFrame = null;
+    }
     clearCursorFaceExpressionTimers();
     isPointerTouchingFace = false;
     setCursorFaceExpression('neutral');
@@ -1498,7 +1522,16 @@ document.fonts.ready.then(() => {
   hideProjectTagsThatDoNotFit();
 });
 
-window.addEventListener('resize', hideProjectTagsThatDoNotFit);
+let projectTagResizeFrameId = null;
+
+window.addEventListener('resize', () => {
+  if (projectTagResizeFrameId !== null) return;
+
+  projectTagResizeFrameId = requestAnimationFrame(() => {
+    projectTagResizeFrameId = null;
+    hideProjectTagsThatDoNotFit();
+  });
+}, { passive: true });
 
 /* ---------- Collapsible motion prototypes ---------- */
 

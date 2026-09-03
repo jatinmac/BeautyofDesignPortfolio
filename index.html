@@ -17,6 +17,7 @@
     <!-- Nanum Gothic Coding for body text; Google Sans / Roboto for high-reading case study body; Mersad for headings -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&amp;family=Roboto:ital,wght@0,300..700;1,300..700&amp;display=swap"
       rel="stylesheet"
@@ -33,6 +34,10 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div class="cherry-blossom-scene" aria-hidden="true">
+      <canvas class="cherry-blossom-scene__canvas"></canvas>
+    </div>
+
     <main class="page-shell">
       <!-- Top navigation controls -->
       <header class="site-header">
@@ -46,6 +51,8 @@
               class="navigation-logo"
               src="assets/images/logo.svg"
               alt=""
+              width="69"
+              height="69"
               aria-hidden="true"
             />
           </button>
@@ -442,7 +449,7 @@
             tabindex="0"
           >
             <div class="project-card__media">
-              <img src="assets/images/builds/ai-website.webp" alt="AI Website" loading="lazy" />
+              <img src="assets/images/builds/ai-website.webp" alt="AI Website" width="1440" height="1024" loading="lazy" decoding="async" />
             </div>
             <h2 class="project-card__title">AI Website</h2>
             <ul class="project-card__tags" aria-label="Build tags"><li>AI-generated web experience</li></ul>
@@ -455,7 +462,7 @@
             tabindex="0"
           >
             <div class="project-card__media">
-              <img src="assets/images/builds/ai-ui-design-system.webp" alt="AI UI design system" loading="lazy" />
+              <img src="assets/images/builds/ai-ui-design-system.webp" alt="AI UI design system" width="1440" height="1024" loading="lazy" decoding="async" />
             </div>
             <h2 class="project-card__title">AI UI</h2>
             <ul class="project-card__tags" aria-label="Build tags"><li>Generative UI sandbox</li></ul>
@@ -468,7 +475,7 @@
             tabindex="0"
           >
             <div class="project-card__media">
-              <img src="assets/images/builds/skills-md.webp" alt="Skills.md project" loading="lazy" />
+              <img src="assets/images/builds/skills-md.webp" alt="Skills.md project" width="1440" height="1024" loading="lazy" decoding="async" />
             </div>
             <h2 class="project-card__title">Skills.md</h2>
             <ul class="project-card__tags" aria-label="Build tags"><li>Markdown skills portfolio</li></ul>
@@ -481,7 +488,7 @@
             tabindex="0"
           >
             <div class="project-card__media">
-              <img src="assets/images/builds/relay-design-system.webp" alt="Relay Storybook documentation" loading="lazy" />
+              <img src="assets/images/builds/relay-design-system.webp" alt="Relay Storybook documentation" width="1440" height="1024" loading="lazy" decoding="async" />
             </div>
             <h2 class="project-card__title">Relay Design Storybook</h2>
             <ul class="project-card__tags" aria-label="Build tags"><li>Component documentation</li></ul>
@@ -489,37 +496,37 @@
 
           <!-- Motion prototypes 1–6 -->
           <article class="card project-card project-card--image-only motion-prototype-card build-card--small-5" data-project-title="Coinbase Wallet Onboarding" data-external-url="https://www.youtube.com/watch?v=Q40UL5DsQ2Q" tabindex="0">
-            <div class="project-card__media"><img src="https://i.ytimg.com/vi/Q40UL5DsQ2Q/hqdefault.jpg" alt="Coinbase Wallet onboarding prototype" loading="lazy" /></div>
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/Q40UL5DsQ2Q/hqdefault.jpg" alt="Coinbase Wallet onboarding prototype" width="480" height="360" loading="lazy" decoding="async" /></div>
             <h2 class="project-card__title">Coinbase Wallet Onboarding</h2>
             <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
           </article>
 
           <article class="card project-card project-card--image-only motion-prototype-card build-card--small-6" data-project-title="Twitter Like Interaction" data-external-url="https://www.youtube.com/watch?v=ncKi6JwKYfo" tabindex="0">
-            <div class="project-card__media"><img src="https://i.ytimg.com/vi/ncKi6JwKYfo/hqdefault.jpg" alt="Twitter like interaction prototype" loading="lazy" /></div>
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/ncKi6JwKYfo/hqdefault.jpg" alt="Twitter like interaction prototype" width="480" height="360" loading="lazy" decoding="async" /></div>
             <h2 class="project-card__title">Twitter Like Interaction</h2>
             <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
           </article>
 
           <article class="card project-card project-card--image-only motion-prototype-card build-card--small-7" data-project-title="Google Pay Interaction Design" data-external-url="https://www.youtube.com/watch?v=vJk7V_fACQM" tabindex="0">
-            <div class="project-card__media"><img src="https://i.ytimg.com/vi/vJk7V_fACQM/hqdefault.jpg" alt="Google Pay interaction design" loading="lazy" /></div>
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/vJk7V_fACQM/hqdefault.jpg" alt="Google Pay interaction design" width="480" height="360" loading="lazy" decoding="async" /></div>
             <h2 class="project-card__title">Google Pay Interaction Design</h2>
             <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
           </article>
 
           <article class="card project-card project-card--image-only motion-prototype-card build-card--small-8" data-project-title="Airbnb iOS Homepage Prototype" data-external-url="https://www.youtube.com/watch?v=JZ1oQVoP3F0" tabindex="0">
-            <div class="project-card__media"><img src="https://i.ytimg.com/vi/JZ1oQVoP3F0/hqdefault.jpg" alt="Airbnb iOS homepage prototype" loading="lazy" /></div>
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/JZ1oQVoP3F0/hqdefault.jpg" alt="Airbnb iOS homepage prototype" width="480" height="360" loading="lazy" decoding="async" /></div>
             <h2 class="project-card__title">Airbnb iOS Homepage Prototype</h2>
             <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
           </article>
 
           <article class="card project-card project-card--image-only motion-prototype-card build-card--small-9" data-project-title="Google Pay Rewards Animation" data-external-url="https://www.youtube.com/watch?v=UhJhaOph0y4" tabindex="0">
-            <div class="project-card__media"><img src="https://i.ytimg.com/vi/UhJhaOph0y4/hqdefault.jpg" alt="Google Pay rewards animation" loading="lazy" /></div>
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/UhJhaOph0y4/hqdefault.jpg" alt="Google Pay rewards animation" width="480" height="360" loading="lazy" decoding="async" /></div>
             <h2 class="project-card__title">Google Pay Rewards Animation</h2>
             <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
           </article>
 
           <article class="card project-card project-card--image-only motion-prototype-card build-card--small-10" data-project-title="Coinbase Wallet Homepage" data-external-url="https://www.youtube.com/watch?v=P8ineV8FnGs" tabindex="0">
-            <div class="project-card__media"><img src="https://i.ytimg.com/vi/P8ineV8FnGs/hqdefault.jpg" alt="Coinbase Wallet homepage prototype" loading="lazy" /></div>
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/P8ineV8FnGs/hqdefault.jpg" alt="Coinbase Wallet homepage prototype" width="480" height="360" loading="lazy" decoding="async" /></div>
             <h2 class="project-card__title">Coinbase Wallet Homepage</h2>
             <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
           </article>
@@ -532,7 +539,7 @@
             tabindex="0"
           >
             <div class="project-card__media">
-              <img src="assets/images/builds/relay-design-system.webp" alt="Relay Design System" loading="lazy" />
+              <img src="assets/images/builds/relay-design-system.webp" alt="Relay Design System" width="1440" height="1024" loading="lazy" decoding="async" />
             </div>
             <h2 class="project-card__title">Relay Design System</h2>
             <ul class="project-card__tags" aria-label="Build tags">
@@ -549,7 +556,7 @@
             tabindex="0"
           >
             <div class="project-card__media">
-              <img src="assets/images/builds/shader-website.webp" alt="WebGL portfolio website" loading="lazy" />
+              <img src="assets/images/builds/shader-website.webp" alt="WebGL portfolio website" width="1440" height="1024" loading="lazy" decoding="async" />
             </div>
             <h2 class="project-card__title">WebGL Website</h2>
             <ul class="project-card__tags" aria-label="Build tags">
@@ -559,25 +566,25 @@
 
           <!-- Motion prototypes 7–10 -->
           <article class="card project-card project-card--image-only motion-prototype-card build-card--small-11" data-project-title="Spotify iOS Homepage" data-external-url="https://www.youtube.com/watch?v=WWZzCqce5yI" tabindex="0">
-            <div class="project-card__media"><img src="https://i.ytimg.com/vi/WWZzCqce5yI/hqdefault.jpg" alt="Spotify iOS homepage prototype" loading="lazy" /></div>
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/WWZzCqce5yI/hqdefault.jpg" alt="Spotify iOS homepage prototype" width="480" height="360" loading="lazy" decoding="async" /></div>
             <h2 class="project-card__title">Spotify iOS Homepage</h2>
             <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
           </article>
 
           <article class="card project-card project-card--image-only motion-prototype-card build-card--small-12" data-project-title="Figma Variables Prototype" data-external-url="https://www.youtube.com/watch?v=FGRbglVqUfo" tabindex="0">
-            <div class="project-card__media"><img src="https://i.ytimg.com/vi/FGRbglVqUfo/hqdefault.jpg" alt="Figma Variables prototype" loading="lazy" /></div>
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/FGRbglVqUfo/hqdefault.jpg" alt="Figma Variables prototype" width="480" height="360" loading="lazy" decoding="async" /></div>
             <h2 class="project-card__title">Figma Variables Prototype</h2>
             <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
           </article>
 
           <article class="card project-card project-card--image-only motion-prototype-card build-card--small-13" data-project-title="Navi Payments App" data-external-url="https://www.youtube.com/watch?v=CQaTDPNtn7U" tabindex="0">
-            <div class="project-card__media"><img src="https://i.ytimg.com/vi/CQaTDPNtn7U/hqdefault.jpg" alt="Navi Payments app prototype" loading="lazy" /></div>
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/CQaTDPNtn7U/hqdefault.jpg" alt="Navi Payments app prototype" width="480" height="360" loading="lazy" decoding="async" /></div>
             <h2 class="project-card__title">Navi Payments App</h2>
             <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
           </article>
 
           <article class="card project-card project-card--image-only motion-prototype-card build-card--small-14" data-project-title="Virtual Dress Try-On App" data-external-url="https://www.youtube.com/watch?v=LZ9FrISExNc" tabindex="0">
-            <div class="project-card__media"><img src="https://i.ytimg.com/vi/LZ9FrISExNc/hqdefault.jpg" alt="Virtual dress try-on app prototype" loading="lazy" /></div>
+            <div class="project-card__media"><img src="https://i.ytimg.com/vi/LZ9FrISExNc/hqdefault.jpg" alt="Virtual dress try-on app prototype" width="480" height="360" loading="lazy" decoding="async" /></div>
             <h2 class="project-card__title">Virtual Dress Try-On App</h2>
             <ul class="project-card__tags" aria-label="Build tags"><li>Motion prototype</li></ul>
           </article>
@@ -636,25 +643,25 @@
           <ul class="about-outcomes" aria-label="Selected outcomes">
             <li>
               <span class="about-outcomes__visual">
-                <img src="assets/images/introImages/DoubleAi.png" alt="Double AI" width="53" height="53" decoding="async" />
+                <img src="assets/images/introImages/DoubleAi.png" alt="Double AI" width="53" height="53" loading="lazy" decoding="async" />
               </span>
               <span>Worked end to end on product features at voice AI startup <strong>Double AI</strong>, previously Cardtree AI, serving <strong>600+ users.</strong></span>
             </li>
             <li>
               <span class="about-outcomes__visual">
-                <img src="assets/images/introImages/MarutiSuzukiLogo-480.png" alt="Suzuki" width="480" height="270" decoding="async" />
+                <img src="assets/images/introImages/MarutiSuzukiLogo-480.png" alt="Suzuki" width="480" height="270" loading="lazy" decoding="async" />
               </span>
               <span>Shipped product design work at <strong>Maruti Suzuki</strong> for Brezza and Victoris, with <strong>100,000+ production cars sold.</strong></span>
             </li>
             <li>
               <span class="about-outcomes__visual">
-                <img src="assets/images/introImages/quilo.png" alt="Quilo" width="60" height="60" decoding="async" />
+                <img src="assets/images/introImages/quilo.png" alt="Quilo" width="60" height="60" loading="lazy" decoding="async" />
               </span>
               <span>Built and launched the <strong>Quilo Chrome extension</strong>, reaching <strong>41 users and 680 peak page visits.</strong></span>
             </li>
             <li>
               <span class="about-outcomes__visual">
-                <img src="assets/images/introImages/Autoflux.webp" alt="AutoFlux" width="451" height="103" decoding="async" />
+                <img src="assets/images/introImages/Autoflux.webp" alt="AutoFlux" width="451" height="103" loading="lazy" decoding="async" />
               </span>
               <span>Building <strong>AutoFlux.in end to end</strong>—an automotive platform for <strong>electric and green mobility.</strong></span>
             </li>
@@ -686,16 +693,16 @@
           <article class="card card--static card--no-tilt about-card about-card--interests">
             <span class="about-card__eyebrow">Interests and hobbies</span>
             <div class="about-card__collage">
-              <figure><img src="assets/images/about/running.avif" alt="Running" loading="lazy" /><figcaption>I love running</figcaption></figure>
-              <figure><img src="assets/images/about/car-enthusiast.avif" alt="Car" loading="lazy" /><figcaption>Car enthusiast</figcaption></figure>
-              <figure><img src="assets/images/about/formula-1.webp" alt="Formula 1" loading="lazy" /><figcaption>Formula 1 nerd</figcaption></figure>
-              <figure><img src="assets/images/about/80s-music.webp" alt="Music" loading="lazy" /><figcaption>’80s music</figcaption></figure>
-              <figure><img src="assets/images/about/bike.webp" alt="Motorcycle" loading="lazy" /><figcaption>Bike lover</figcaption></figure>
-              <figure><img src="assets/images/about/dragon-ball-z.webp" alt="Dragon Ball Z" loading="lazy" /><figcaption>Dragon Ball Z</figcaption></figure>
-              <figure><img src="assets/images/about/marvel-dc.webp" alt="Marvel and DC" loading="lazy" /><figcaption>Marvel &amp; DC</figcaption></figure>
-              <figure><img src="assets/images/about/motogp.webp" alt="MotoGP" loading="lazy" /><figcaption>MotoGP fan</figcaption></figure>
-              <figure><img src="assets/images/about/watches.webp" alt="Watch" loading="lazy" /><figcaption>Watch lover</figcaption></figure>
-              <figure><img src="assets/images/about/wwe.webp" alt="WWE" loading="lazy" /><figcaption>WWE fan</figcaption></figure>
+              <figure><img src="assets/images/about/running.avif" alt="Running" width="1070" height="1338" loading="lazy" decoding="async" /><figcaption>I love running</figcaption></figure>
+              <figure><img src="assets/images/about/car-enthusiast.avif" alt="Car" width="1920" height="938" loading="lazy" decoding="async" /><figcaption>Car enthusiast</figcaption></figure>
+              <figure><img src="assets/images/about/formula-1.webp" alt="Formula 1" width="640" height="520" loading="lazy" decoding="async" /><figcaption>Formula 1 nerd</figcaption></figure>
+              <figure><img src="assets/images/about/80s-music.webp" alt="Music" width="640" height="640" loading="lazy" decoding="async" /><figcaption>’80s music</figcaption></figure>
+              <figure><img src="assets/images/about/bike.webp" alt="Motorcycle" width="640" height="480" loading="lazy" decoding="async" /><figcaption>Bike lover</figcaption></figure>
+              <figure><img src="assets/images/about/dragon-ball-z.webp" alt="Dragon Ball Z" width="449" height="640" loading="lazy" decoding="async" /><figcaption>Dragon Ball Z</figcaption></figure>
+              <figure><img src="assets/images/about/marvel-dc.webp" alt="Marvel and DC" width="640" height="320" loading="lazy" decoding="async" /><figcaption>Marvel &amp; DC</figcaption></figure>
+              <figure><img src="assets/images/about/motogp.webp" alt="MotoGP" width="640" height="360" loading="lazy" decoding="async" /><figcaption>MotoGP fan</figcaption></figure>
+              <figure><img src="assets/images/about/watches.webp" alt="Watch" width="640" height="426" loading="lazy" decoding="async" /><figcaption>Watch lover</figcaption></figure>
+              <figure><img src="assets/images/about/wwe.webp" alt="WWE" width="640" height="320" loading="lazy" decoding="async" /><figcaption>WWE fan</figcaption></figure>
             </div>
           </article>
         </div>
@@ -822,5 +829,6 @@
     </main>
 
     <script src="script.js"></script>
+    <script type="module" src="cherry-blossoms.js"></script>
   </body>
 </html>

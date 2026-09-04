@@ -34,10 +34,6 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="cherry-blossom-scene" aria-hidden="true">
-      <canvas class="cherry-blossom-scene__canvas"></canvas>
-    </div>
-
     <main class="page-shell">
       <!-- Top navigation controls -->
       <header class="site-header">
@@ -162,48 +158,16 @@
                   focusable="false"
                 >
                   <defs>
-                    <radialGradient
-                      id="intro-cursor-face-inner-glow"
-                      cx="36%"
-                      cy="30%"
-                      r="72%"
-                      fx="36%"
-                      fy="30%"
-                    >
-                      <stop offset="0%" stop-color="#242424" />
-                      <stop offset="38%" stop-color="#080808" />
-                      <stop offset="68%" stop-color="black" />
-                      <stop offset="86%" stop-color="#181818" />
-                      <stop offset="100%" stop-color="#626262" />
-                    </radialGradient>
-                    <radialGradient
-                      id="intro-cursor-face-specular-glow"
-                      cx="28%"
-                      cy="20%"
-                      r="56%"
-                    >
-                      <stop offset="0%" stop-color="white" stop-opacity="0.16" />
-                      <stop offset="42%" stop-color="white" stop-opacity="0.035" />
-                      <stop offset="100%" stop-color="white" stop-opacity="0" />
-                    </radialGradient>
                     <clipPath id="intro-cursor-face-boundary">
-                      <circle cx="67.0587" cy="67.0587" r="67.0587" />
+                      <circle cx="67.5" cy="67.5" r="65" />
                     </clipPath>
                   </defs>
                   <circle
                     class="cursor-face__head"
-                    cx="67.0587"
-                    cy="67.0587"
-                    r="67.0587"
-                    fill="url(#intro-cursor-face-inner-glow)"
-                  />
-                  <circle
-                    class="cursor-face__head"
-                    cx="67.0587"
-                    cy="67.0587"
-                    r="67.0587"
-                    fill="url(#intro-cursor-face-specular-glow)"
-                    pointer-events="none"
+                    cx="67.5"
+                    cy="67.5"
+                    r="65"
+                    fill="#080808"
                   />
                   <g clip-path="url(#intro-cursor-face-boundary)">
                     <g class="cursor-face__eyes">
@@ -223,7 +187,7 @@
               </div>
               <h1>Jatin Davis</h1>
               <p class="intro-card__lead">
-                <strong>User and business driven AI native product designer & builder</strong>. Worked in <strong>b2b and b2c</strong> across <strong>Double AI</strong> (voice ai startup), <strong>Maruti Suzuki</strong> (largest automobile manufactures in india), <strong>Quilo</strong> and <strong>AutoFlux.in</strong>.
+                <strong>Craft,User, and business driven AI native product designer & builder</strong>. Worked in <strong>b2b and b2c</strong> across <strong>Double AI</strong> (voice ai startup), <strong>Maruti Suzuki</strong> (largest automobile manufactures in india), <strong>Quilo</strong> and <strong>AutoFlux.in</strong>.
               </p>
 
             </div>
@@ -829,6 +793,5 @@
     </main>
 
     <script src="script.js"></script>
-    <script type="module" src="cherry-blossoms.js"></script>
   </body>
 </html>

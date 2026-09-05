@@ -23,11 +23,6 @@ const motionPrototypeCards = document.querySelectorAll('.motion-prototype-card')
 const introCard = document.querySelector('.intro-card');
 const introTitle = introCard.querySelector('h1');
 const introParticleCanvas = introCard.querySelector('.intro-card__particles');
-const cursorFace = introCard.querySelector('.cursor-face');
-const cursorFaceAsset = cursorFace.querySelector('.cursor-face__svg');
-const cursorFaceBlink = cursorFaceAsset.querySelector('.cursor-face__blink');
-const cursorFaceLeftEye = cursorFaceAsset.querySelector('.cursor-face__eye--left');
-const cursorFaceRightEye = cursorFaceAsset.querySelector('.cursor-face__eye--right');
 const reducedMotionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
 const mobileLayoutPreference = window.matchMedia('(max-width: 760px)');
 
@@ -41,10 +36,49 @@ if (!reducedMotionPreference.matches) {
   introTitle.style.opacity = '0';
 }
 
+/* ---------- Cursor-reactive intro faces ---------- */
 
-/* ---------- Cursor-reactive intro face ---------- */
+const cursorFaceControllers = new WeakMap();
+let latestMascotPointer = null;
 
-if (!reducedMotionPreference.matches) {
+window.addEventListener('pointermove', (event) => {
+  if (event.pointerType === 'touch') return;
+  latestMascotPointer = {
+    clientX: event.clientX, clientY: event.clientY, timeStamp: event.timeStamp
+  };
+}, { passive: true });
+
+function releaseMascotPointer() {
+  latestMascotPointer = null;
+  introCard.querySelectorAll('.cursor-face').forEach((element) => {
+    cursorFaceControllers.get(element)?.releasePointer();
+  });
+}
+
+document.documentElement.addEventListener('mouseleave', releaseMascotPointer);
+window.addEventListener('blur', releaseMascotPointer);
+window.addEventListener('pointercancel', releaseMascotPointer);
+
+function initializeCursorFace(cursorFace) {
+  if (reducedMotionPreference.matches) return;
+
+  const cursorFaceAsset = cursorFace.querySelector('.cursor-face__svg');
+  const cursorFaceBlink = cursorFaceAsset.querySelector('.cursor-face__blink');
+  const cursorFaceLeftEye = cursorFaceAsset.querySelector('.cursor-face__eye--left');
+  const cursorFaceRightEye = cursorFaceAsset.querySelector('.cursor-face__eye--right');
+  const viewBox = cursorFaceAsset.viewBox.baseVal;
+  const leftEyeBounds = cursorFaceLeftEye.getBBox();
+  const rightEyeBounds = cursorFaceRightEye.getBBox();
+  const personality = [...cursorFace.parentElement.children].indexOf(cursorFace);
+  const gazeResponse = 0.9 + personality * 0.035;
+  const eyeCenterY = (leftEyeBounds.y + leftEyeBounds.height / 2
+    + rightEyeBounds.y + rightEyeBounds.height / 2) / 2;
+  // Shorter and asymmetric heads need less gaze travel to keep the eyes legible.
+  const gazeScaleX = cursorFace.dataset.mascot ? 0.45 : 1;
+  const gazeScaleY = cursorFace.dataset.mascot ? 0.32 : 1;
+  let isSpeaking = false;
+
+  // Each mascot owns its springs, expression sequence, and blink timers.
   function createCursorFaceEyePose(overrides = {}) {
     return {
       x: 0,
@@ -74,6 +108,36 @@ if (!reducedMotionPreference.matches) {
   // into shapes that stay legible without adding pupils, brows, lids, or tears.
   const CURSOR_FACE_EXPRESSIONS = {
     neutral: createCursorFaceExpression({}, {}),
+    bright: createCursorFaceExpression(
+      { x: -1, y: -1, rotation: -5, scaleX: 1.13, scaleY: 1.16 },
+      { x: 1, y: -2, rotation: 5, scaleX: 1.09, scaleY: 1.2 },
+      { gaze: 0.95, hold: 2200 }
+    ),
+    inquisitive: createCursorFaceExpression(
+      { y: -3, rotation: -9, scaleX: 0.98, scaleY: 1.18 },
+      { y: 2, rotation: -3, scaleX: 1.08, scaleY: 0.88 },
+      { gaze: 0.96, hold: 2400 }
+    ),
+    amused: createCursorFaceExpression(
+      { y: 1, rotation: -8, scaleX: 1.17, scaleY: 0.86 },
+      { y: -1, rotation: 7, scaleX: 1.1, scaleY: 1.02 },
+      { gaze: 0.94, hold: 2100 }
+    ),
+    focused: createCursorFaceExpression(
+      { x: 1, rotation: 5, scaleX: 0.94, scaleY: 1.06 },
+      { x: -1, rotation: -5, scaleX: 0.98, scaleY: 1.1 },
+      { gaze: 1, hold: 2200 }
+    ),
+    soft: createCursorFaceExpression(
+      { y: 1, rotation: -4, scaleX: 1.07, scaleY: 0.94 },
+      { y: 2, rotation: 4, scaleX: 1.04, scaleY: 0.9 },
+      { gaze: 0.96, hold: 2600 }
+    ),
+    wonder: createCursorFaceExpression(
+      { x: -1, y: -2, rotation: -3, scaleX: 1.18, scaleY: 1.24 },
+      { x: 1, y: -3, rotation: 3, scaleX: 1.14, scaleY: 1.2 },
+      { gaze: 0.92, hold: 1700 }
+    ),
     alert: createCursorFaceExpression(
       { x: -3, scaleX: 1.08, scaleY: 1.16 },
       { x: 3, scaleX: 1.08, scaleY: 1.16 },
@@ -197,6 +261,12 @@ if (!reducedMotionPreference.matches) {
   };
 
   const CURSOR_FACE_EXPRESSION_DYNAMICS = {
+    bright: { response: 0.075, damping: 0.8, lag: 48, organic: 0.45 },
+    inquisitive: { response: 0.07, damping: 0.81, lag: 82, lead: 'right', organic: 0.6 },
+    amused: { response: 0.072, damping: 0.8, lag: 62, lead: 'left', organic: 0.5 },
+    focused: { response: 0.082, damping: 0.79, lag: 32, organic: 0.25 },
+    soft: { response: 0.06, damping: 0.83, lag: 72, organic: 0.32 },
+    wonder: { response: 0.09, damping: 0.77, lag: 38, organic: 0.5 },
     neutral: { response: 0.072, damping: 0.76, lag: 18, organic: 0.16 },
     alert: { response: 0.12, damping: 0.66, lag: 34, organic: 0.42 },
     wink: { response: 0.17, damping: 0.59, lag: 52, lead: 'left', organic: 0.34 },
@@ -316,10 +386,10 @@ if (!reducedMotionPreference.matches) {
     [{ name: 'dizzy', duration: 620 }, { name: 'bashful', duration: 680 }]
   ];
   const CURSOR_FACE_POSE_PROPERTIES = ['x', 'y', 'rotation', 'scaleX', 'scaleY'];
-  const CURSOR_FACE_CENTER_X = 67.0587;
-  const CURSOR_FACE_LEFT_EYE_CENTER_X = 51.525;
-  const CURSOR_FACE_RIGHT_EYE_CENTER_X = 83.525;
-  const CURSOR_FACE_EYE_ORBIT_RADIUS = 63;
+  const CURSOR_FACE_CENTER_X = viewBox.width / 2;
+  const CURSOR_FACE_LEFT_EYE_CENTER_X = leftEyeBounds.x + leftEyeBounds.width / 2;
+  const CURSOR_FACE_RIGHT_EYE_CENTER_X = rightEyeBounds.x + rightEyeBounds.width / 2;
+  const CURSOR_FACE_EYE_ORBIT_RADIUS = viewBox.width * 0.467;
   const neutralCursorFaceExpression = CURSOR_FACE_EXPRESSIONS.neutral;
 
   const faceMotion = {
@@ -370,6 +440,22 @@ if (!reducedMotionPreference.matches) {
   let shouldLeadWithSignatureSpin = true;
   let isPointerTouchingFace = false;
   let nextContactExpressionTime = 0;
+  let socialCue = null;
+  let socialMotionPaused = false;
+  let nextPointerExpressionAt = 0;
+  let pointerExpressionBeat = 0;
+  const pointerExpressions = ['inquisitive', 'bright', 'focused', 'amused', 'soft', 'wonder'];
+
+  function updatePointerExpression(now, speed, touching) {
+    if (isSpeaking || now < nextPointerExpressionAt) return;
+    const name = speed > 1.8 ? (personality % 2 ? 'focused' : 'wonder')
+      : touching ? (personality % 2 ? 'amused' : 'bright')
+      : pointerExpressions[(personality + pointerExpressionBeat) % pointerExpressions.length];
+    pointerExpressionBeat += 1;
+    nextPointerExpressionAt = now + 2100 + personality * 110;
+    clearCursorFaceExpressionTimers();
+    setCursorFaceExpression(name, 2600);
+  }
 
   function clampFaceMotion(value) {
     return Math.max(-1, Math.min(1, value));
@@ -579,6 +665,8 @@ if (!reducedMotionPreference.matches) {
   }
 
   function scheduleAutonomousCursorFaceExpression(delay = 2800 + Math.random() * 3200) {
+    // The playground coordinates expressions with the shared conversation.
+    if (cursorFaceControllers.has(cursorFace)) return;
     window.clearTimeout(autonomousExpressionTimerId);
     autonomousExpressionTimerId = window.setTimeout(() => {
       if (document.hidden || isPointerTouchingFace) {
@@ -605,9 +693,10 @@ if (!reducedMotionPreference.matches) {
 
   function playCursorFaceContactReaction(now, isInitialContact) {
     clearCursorFaceExpressionTimers();
-    const routines = isInitialContact
-      ? CONTACT_CURSOR_FACE_ROUTINES
-      : CONTINUED_CONTACT_CURSOR_FACE_ROUTINES;
+    const routines = [
+      [{ name: 'curious', duration: 1100 }, { name: 'wink', duration: 850 }],
+      [{ name: 'delighted', duration: 1000 }, { name: 'neutral', duration: 900 }]
+    ];
     const routineIndex = getRandomRoutineIndex(routines, previousContactRoutineIndex);
     const routine = routines[routineIndex];
     const routineDuration = routine.reduce((duration, beat) => duration + beat.duration, 0);
@@ -768,7 +857,7 @@ if (!reducedMotionPreference.matches) {
       faceMotion.leftEye,
       faceMotion.leftEye.targetX,
       faceMotion.leftEye.targetY,
-      0.11,
+      0.11 * gazeResponse,
       0.63,
       frameScale
     );
@@ -776,7 +865,7 @@ if (!reducedMotionPreference.matches) {
       faceMotion.rightEye,
       faceMotion.rightEye.targetX,
       faceMotion.rightEye.targetY,
-      0.092,
+      0.092 * gazeResponse,
       0.67,
       frameScale
     );
@@ -791,10 +880,10 @@ if (!reducedMotionPreference.matches) {
 
     const expressionPose = faceMotion.expression.current;
     const organicMotion = getCursorFaceOrganicMotion(now);
-    const leftGazeX = renderedLeftX * 36 * expressionPose.gaze;
-    const leftGazeY = renderedLeftY * 33 * expressionPose.gaze;
-    const rightGazeX = renderedRightX * 39 * expressionPose.gaze;
-    const rightGazeY = renderedRightY * 35 * expressionPose.gaze;
+    const leftGazeX = renderedLeftX * 36 * expressionPose.gaze * gazeScaleX;
+    const leftGazeY = renderedLeftY * 33 * expressionPose.gaze * gazeScaleY;
+    const rightGazeX = renderedRightX * 39 * expressionPose.gaze * gazeScaleX;
+    const rightGazeY = renderedRightY * 35 * expressionPose.gaze * gazeScaleY;
     const leftLocalX = leftGazeX + expressionPose.left.x + organicMotion.left.x;
     const rightLocalX = rightGazeX + expressionPose.right.x + organicMotion.right.x;
     const spinMotion = getCursorFaceSpinMotion(now);
@@ -845,26 +934,24 @@ if (!reducedMotionPreference.matches) {
   }
 
   function startCursorFaceMotion() {
+    if (socialMotionPaused || reducedMotionPreference.matches || document.hidden) return;
     if (faceMotion.frameId === null) {
       faceMotion.frameId = requestAnimationFrame(renderCursorFace);
     }
   }
 
-  let pendingCursorFacePointerFrame = null;
-  let latestCursorFacePointer = null;
+  function updateCursorFaceFromPointer(faceBounds) {
+    const event = latestMascotPointer;
+    if (!event || socialMotionPaused || reducedMotionPreference.matches) return;
 
-  function updateCursorFaceFromPointer() {
-    pendingCursorFacePointerFrame = null;
-    const event = latestCursorFacePointer;
-    if (!event) return;
-
-    const faceBounds = cursorFace.getBoundingClientRect();
-    updateCursorFaceContact(event, faceBounds);
+    const assetScale = Math.min(faceBounds.width / viewBox.width, faceBounds.height / viewBox.height);
+    const assetLeft = faceBounds.left + (faceBounds.width - viewBox.width * assetScale) / 2;
+    const assetTop = faceBounds.top + faceBounds.height - viewBox.height * assetScale;
     const centerX = faceBounds.left + faceBounds.width / 2;
     const centerY = faceBounds.top + faceBounds.height / 2;
-    const leftEyeCenterX = faceBounds.left + faceBounds.width * (51.525 / 135);
-    const rightEyeCenterX = faceBounds.left + faceBounds.width * (83.525 / 135);
-    const eyeCenterY = faceBounds.top + faceBounds.height * (67.06 / 135);
+    const leftEyeCenterX = assetLeft + CURSOR_FACE_LEFT_EYE_CENTER_X * assetScale;
+    const rightEyeCenterX = assetLeft + CURSOR_FACE_RIGHT_EYE_CENTER_X * assetScale;
+    const renderedEyeCenterY = assetTop + eyeCenterY * assetScale;
     const responseRadius = Math.max(
       160,
       Math.min(240, Math.min(window.innerWidth, window.innerHeight) * 0.25)
@@ -880,14 +967,14 @@ if (!reducedMotionPreference.matches) {
       event.clientX,
       event.clientY,
       leftEyeCenterX,
-      eyeCenterY,
+      renderedEyeCenterY,
       responseRadius
     );
     const rightGaze = getCursorGaze(
       event.clientX,
       event.clientY,
       rightEyeCenterX,
-      eyeCenterY,
+      renderedEyeCenterY,
       responseRadius
     );
     const pointerTime = event.timeStamp || performance.now();
@@ -900,6 +987,9 @@ if (!reducedMotionPreference.matches) {
     const pointerVelocityY = faceMotion.previousPointerY === null
       ? 0
       : (event.clientY - faceMotion.previousPointerY) / pointerDeltaTime;
+    const touching = Math.hypot(event.clientX - centerX, event.clientY - centerY)
+      < Math.min(faceBounds.width, faceBounds.height) * 0.55;
+    updatePointerExpression(performance.now(), Math.hypot(pointerVelocityX, pointerVelocityY), touching);
     const velocityLeadX = clampFaceMotion(pointerVelocityX * 0.055) * 0.12;
     const velocityLeadY = clampFaceMotion(pointerVelocityY * 0.055) * 0.12;
 
@@ -919,39 +1009,22 @@ if (!reducedMotionPreference.matches) {
     startCursorFaceMotion();
   }
 
-  window.addEventListener('pointermove', (event) => {
-    latestCursorFacePointer = {
-      clientX: event.clientX,
-      clientY: event.clientY,
-      timeStamp: event.timeStamp
-    };
-
-    if (pendingCursorFacePointerFrame === null) {
-      pendingCursorFacePointerFrame = requestAnimationFrame(updateCursorFaceFromPointer);
-    }
-  }, { passive: true });
-
-  document.documentElement.addEventListener('mouseleave', () => {
-    latestCursorFacePointer = null;
-    if (pendingCursorFacePointerFrame !== null) {
-      cancelAnimationFrame(pendingCursorFacePointerFrame);
-      pendingCursorFacePointerFrame = null;
-    }
+  function resetPointerAttention() {
     clearCursorFaceExpressionTimers();
     isPointerTouchingFace = false;
-    setCursorFaceExpression('neutral');
-    scheduleAutonomousCursorFaceExpression(1600 + Math.random() * 1800);
-    faceMotion.targetX = 0;
-    faceMotion.targetY = 0;
-    faceMotion.leftEye.targetX = 0;
-    faceMotion.leftEye.targetY = 0;
-    faceMotion.rightEye.targetX = 0;
-    faceMotion.rightEye.targetY = 0;
+    nextPointerExpressionAt = 0;
+    setCursorFaceExpression(socialCue?.expression ?? 'neutral');
+    faceMotion.targetX = (socialCue?.x ?? 0) * 0.4;
+    faceMotion.targetY = (socialCue?.y ?? 0) * 0.4;
+    faceMotion.leftEye.targetX = socialCue?.x ?? 0;
+    faceMotion.leftEye.targetY = socialCue?.y ?? 0;
+    faceMotion.rightEye.targetX = socialCue?.x ?? 0;
+    faceMotion.rightEye.targetY = socialCue?.y ?? 0;
     faceMotion.previousPointerX = null;
     faceMotion.previousPointerY = null;
     faceMotion.previousPointerTime = null;
     startCursorFaceMotion();
-  });
+  }
 
   let blinkTimerId = null;
   let cursorFaceBlinkEndHandler = null;
@@ -973,6 +1046,7 @@ if (!reducedMotionPreference.matches) {
   }
 
   function playCursorFaceBlink(canDoubleBlink) {
+    if (socialMotionPaused || reducedMotionPreference.matches) return;
     if (document.hidden) {
       scheduleCursorFaceBlink();
       return;
@@ -1019,14 +1093,1022 @@ if (!reducedMotionPreference.matches) {
       return;
     }
 
-    setCursorFaceExpression('neutral');
+    if (socialMotionPaused || reducedMotionPreference.matches) return;
+    setCursorFaceExpression(socialCue?.expression ?? 'neutral');
     scheduleAutonomousCursorFaceExpression(1200 + Math.random() * 1800);
     scheduleCursorFaceBlink(900 + Math.random() * 1800);
+  });
+
+  cursorFaceControllers.set(cursorFace, {
+    trackPointer: updateCursorFaceFromPointer,
+    releasePointer: resetPointerAttention,
+    cue(nextCue) {
+      const changedBeat = socialCue?.key !== nextCue?.key;
+      const changedGaze = Math.abs((socialCue?.x ?? 0) - (nextCue?.x ?? 0)) > 0.001
+        || Math.abs((socialCue?.y ?? 0) - (nextCue?.y ?? 0)) > 0.001;
+      if (!changedBeat && !changedGaze) return;
+      socialCue = nextCue;
+      // Cursor attention takes priority, unless this face is speaking a greeting.
+      if (latestMascotPointer && !nextCue?.isSpeaking) return;
+      if (changedBeat) {
+        clearCursorFaceExpressionTimers();
+        isPointerTouchingFace = false;
+        setCursorFaceExpression(nextCue?.expression ?? 'neutral', nextCue?.isSpeaking ? 3600 : 1800);
+      }
+      const gazeX = nextCue?.x ?? 0;
+      const gazeY = nextCue?.y ?? 0;
+      faceMotion.targetX = gazeX * 0.4;
+      faceMotion.targetY = gazeY * 0.4;
+      faceMotion.leftEye.targetX = gazeX;
+      faceMotion.rightEye.targetX = gazeX;
+      faceMotion.leftEye.targetY = gazeY;
+      faceMotion.rightEye.targetY = gazeY;
+      startCursorFaceMotion();
+    },
+    setSpeaking(speaking, expressionName = 'bright') {
+      isSpeaking = Boolean(speaking);
+      if (isSpeaking) {
+        clearCursorFaceExpressionTimers();
+        isPointerTouchingFace = false;
+        setCursorFaceExpression(expressionName, 4000);
+        faceMotion.targetX = 0;
+        faceMotion.targetY = -0.16;
+        faceMotion.leftEye.targetX = 0;
+        faceMotion.leftEye.targetY = -0.28;
+        faceMotion.rightEye.targetX = 0;
+        faceMotion.rightEye.targetY = -0.28;
+        startCursorFaceMotion();
+      } else {
+        setCursorFaceExpression('neutral', 600);
+      }
+    },
+    pause(paused) {
+      if (socialMotionPaused === paused) return;
+      socialMotionPaused = paused;
+      if (paused) {
+        clearCursorFaceExpressionTimers();
+        window.clearTimeout(blinkTimerId);
+        stopCursorFaceBlink();
+        if (faceMotion.frameId !== null) cancelAnimationFrame(faceMotion.frameId);
+        faceMotion.frameId = null;
+        faceMotion.previousFrameTime = null;
+      } else {
+        startCursorFaceMotion();
+        scheduleCursorFaceBlink(1000 + Math.random() * 2200);
+      }
+    }
   });
 
   cursorFace.dataset.expression = 'neutral';
   scheduleAutonomousCursorFaceExpression(1800 + Math.random() * 2200);
   scheduleCursorFaceBlink(1600 + Math.random() * 1800);
+}
+
+introCard.querySelectorAll('.cursor-face').forEach(initializeCursorFace);
+
+/* ---------- Mascot playground ---------- */
+
+function initializeMascotPlayground() {
+  const playground = introCard.querySelector('.intro-card__mascots');
+  const bodies = [...playground.querySelectorAll('.cursor-face')].map((element, index) => ({
+    element,
+    index,
+    ratio: element.querySelector('svg').viewBox.baseVal.height
+      / element.querySelector('svg').viewBox.baseVal.width,
+    homeX: 0, width: 0, height: 0
+  }));
+  // One neighboring pair shares a scene; everyone else breathes and watches.
+  // Each scene leaves six seconds of quiet before a different pair takes over.
+  const pairOrder = [0, 3, 5, 1, 4, 2].filter((index) => index + 1 < bodies.length);
+  const sceneDuration = 20;
+  let width = 0;
+  let elapsed = 0;
+  let frameId = null;
+  let previousTime = null;
+  let visible = true;
+  let enabled = false;
+  let flightPending = false;
+  let flightRunning = false;
+  let cancelFlight = null;
+  let activeSpeaker = null;
+
+  const ease = (value) => {
+    const t = Math.max(0, Math.min(1, value));
+    return t * t * t * (t * (t * 6 - 15) + 10);
+  };
+  const pulse = (time, start, duration) => {
+    const t = (time - start) / duration;
+    return t > 0 && t < 1 ? Math.sin(t * Math.PI) ** 4 : 0;
+  };
+
+  function layout() {
+    if (!enabled || flightRunning) return;
+    width = playground.clientWidth;
+    const size = Math.max(1, Math.min(60, (width - 54) / bodies.length));
+    const edge = Math.min(5, width * 0.015);
+    bodies.forEach((body, index) => {
+      body.width = size;
+      body.height = size * body.ratio;
+      body.homeX = edge + index * (width - size - edge * 2) / (bodies.length - 1);
+      body.element.style.width = `${size}px`;
+      body.element.style.height = `${body.height}px`;
+    });
+    render();
+  }
+
+  function render() {
+    if (flightRunning) return;
+    // Read the moving row once, then share its geometry with every eye controller.
+    const playgroundBounds = latestMascotPointer ? playground.getBoundingClientRect() : null;
+    const scene = Math.floor(elapsed / sceneDuration);
+    const time = elapsed % sceneDuration;
+    const first = pairOrder[scene % pairOrder.length];
+    const second = first + 1;
+    const partnerA = bodies[first];
+    const partnerB = bodies[second];
+    const approach = ease(time / 2.4) * (1 - ease((time - 11.8) / 2.2));
+    const availableGap = partnerB.homeX - partnerA.homeX - partnerA.width;
+    const closeness = Math.max(0, (availableGap - 7) / 2);
+    const playful = scene % 3;
+    const beat = time < 2.4 ? 'notice'
+      : time < 5.2 ? 'speak'
+      : time < 8.2 ? 'reply'
+      : time < 11.8 ? 'play'
+      : 'settle';
+    const isSpeakingActive = activeSpeaker !== null && activeSpeaker.index >= 0 && activeSpeaker.index < bodies.length;
+
+    bodies.forEach((body) => {
+      const isFirst = body.index === first;
+      const isSecond = body.index === second;
+      const paired = !isSpeakingActive && (isFirst || isSecond) && time < 14;
+      const direction = isFirst ? 1 : -1;
+      const phase = body.index * 1.13;
+      const breathing = Math.sin(elapsed * 1.2 + phase) * 0.006;
+      let x = body.homeX;
+      let lift = 0;
+      let lean = Math.sin(elapsed * 0.72 + phase) * 0.35;
+      let squash = 0;
+
+      if (isSpeakingActive) {
+        if (body.index === activeSpeaker.index) {
+          // Talking cadence: lively rhythmic bobs and expressive tilts
+          const speakTime = Math.max(0, elapsed - activeSpeaker.startTime);
+          const talkCadence = Math.sin(speakTime * 11) * Math.cos(speakTime * 5.5);
+          const talkHop = Math.max(0, Math.sin(speakTime * 8.5)) * Math.min(1, speakTime * 3);
+          lift = talkHop * 6.5;
+          squash = (talkHop > 0.2 ? 0.04 : -0.02) + talkCadence * 0.025;
+          lean = Math.sin(speakTime * 5.2) * 2.2;
+
+          cursorFaceControllers.get(body.element)?.cue({
+            key: `speaking-${activeSpeaker.index}-${activeSpeaker.expression}`,
+            expression: activeSpeaker.expression,
+            isSpeaking: true,
+            x: 0,
+            y: -0.26
+          });
+        } else {
+          // Attentive listening: look toward the speaking friend
+          const dirToSpeaker = activeSpeaker.index > body.index ? 1 : -1;
+          lean += dirToSpeaker * 1.2;
+          cursorFaceControllers.get(body.element)?.cue({
+            key: `listening-${activeSpeaker.index}`,
+            expression: 'soft',
+            isSpeaking: false,
+            x: dirToSpeaker * 0.28,
+            y: -0.08
+          });
+        }
+      } else if (paired) {
+        x += direction * closeness * approach;
+        lean += direction * 1.25 * approach;
+        // A speaker gives two small accents; their partner answers after a pause.
+        const speaking = isFirst
+          ? pulse(time, 2.7, 1.15) + pulse(time, 4.0, 0.95)
+          : pulse(time, 5.6, 1.15) + pulse(time, 6.95, 1.0);
+        const listening = isFirst ? pulse(time, 6.1, 1.8) : pulse(time, 3.1, 1.8);
+        squash += speaking * 0.014 + listening * 0.009;
+        lean += direction * (speaking * 0.7 + listening * 0.5);
+
+        const delay = isFirst ? 0 : 0.65;
+        if (playful === 0) {
+          // A small hop is echoed by the listener, with anticipation and a soft landing.
+          const hop = pulse(time, 8.65 + delay, 1.35);
+          lift = Math.min(5, body.height * 0.1) * hop;
+          squash += pulse(time, 8.2 + delay, 0.6) * 0.035
+            - hop * 0.012 + pulse(time, 9.8 + delay, 0.7) * 0.026;
+        } else if (playful === 1) {
+          // A gentle lean toward each other, then a slow release.
+          const nuzzle = pulse(time, 8.4, 2.7);
+          lean += direction * nuzzle * 1.1;
+          squash += nuzzle * 0.018;
+        } else {
+          // A tiny rocking game passes from one friend to the other.
+          lean += direction * (pulse(time, 8.3 + delay, 1.3)
+            - pulse(time, 9.7 + delay, 1.3)) * 1.4;
+          squash += pulse(time, 8.6 + delay, 1.7) * 0.016;
+        }
+
+        const expression = beat === 'play' ? (isFirst ? 'delighted' : 'wink')
+          : (beat === 'speak' && isFirst) || (beat === 'reply' && isSecond) ? 'curious'
+          : 'neutral';
+        const partner = isFirst ? partnerB : partnerA;
+        cursorFaceControllers.get(body.element)?.cue({
+          key: `${scene}-${beat}-${direction}`,
+          expression,
+          x: direction * 0.38 * approach,
+          y: Math.max(-0.16, Math.min(0.16, (body.height - partner.height) / 120))
+        });
+      } else {
+        const idleBeat = Math.floor((elapsed + body.index * 1.3) / 7.5);
+        const idleExpressions = ['soft', 'focused', 'inquisitive', 'bright', 'amused', 'neutral', 'wonder'];
+        cursorFaceControllers.get(body.element)?.cue({
+          key: `idle-${idleBeat}`,
+          expression: idleExpressions[(body.index + idleBeat) % idleExpressions.length],
+          x: 0, y: 0
+        });
+      }
+
+      const renderedWidth = body.width;
+
+      // Resize the actual SVG viewport instead of magnifying a small composited layer.
+      body.element.style.width = `${renderedWidth}px`;
+      body.element.style.height = `${renderedWidth * body.ratio}px`;
+      // Choreographed offsets keep neighbors clear without collision impulses.
+      body.element.style.transform = `translate(${x.toFixed(3)}px, ${(-lift).toFixed(3)}px) rotate(${lean.toFixed(3)}deg) scale(${(1 + squash - breathing * 0.45).toFixed(4)}, ${(1 - squash + breathing).toFixed(4)})`;
+      if (playgroundBounds) {
+        cursorFaceControllers.get(body.element)?.trackPointer({
+          left: playgroundBounds.left + x,
+          top: playgroundBounds.bottom - lift - renderedWidth * body.ratio,
+          width: renderedWidth,
+          height: renderedWidth * body.ratio
+        });
+      }
+    });
+  }
+
+  function tick(now) {
+    if (flightPending && visible) {
+      flightPending = false;
+      flightRunning = true;
+      frameId = null;
+      cancelFlight = runMascotFlight(bodies.map(({ element }) => element), () => {
+        flightRunning = false;
+        cancelFlight = null;
+        layout();
+        updatePlayback();
+      });
+      return;
+    }
+    const dt = previousTime === null ? 0 : Math.min(0.05, (now - previousTime) / 1000);
+    elapsed += dt;
+    previousTime = now;
+    render();
+    frameId = requestAnimationFrame(tick);
+  }
+
+  function updatePlayback() {
+    if (frameId !== null) cancelAnimationFrame(frameId);
+    frameId = null;
+    previousTime = null;
+    const wasEnabled = enabled;
+    enabled = !reducedMotionPreference.matches;
+    if (flightRunning) {
+      if (!enabled || document.hidden) cancelFlight?.();
+      return;
+    }
+    if (!enabled || document.hidden) {
+      flightPending = false;
+      ballButton.removeAttribute('aria-busy');
+    }
+    playground.classList.toggle('is-playing', enabled);
+    const paused = !enabled || !visible || document.hidden;
+    bodies.forEach(({ element }) => {
+      if (enabled && !cursorFaceControllers.has(element)) initializeCursorFace(element);
+      cursorFaceControllers.get(element)?.pause(paused);
+      if (!enabled) {
+        cursorFaceControllers.get(element)?.cue(null);
+        ['width', 'height', 'transform'].forEach((property) => element.style.removeProperty(property));
+        element.querySelectorAll('.cursor-face__svg, .cursor-face__eye').forEach((node) => {
+          node.style.removeProperty('transform');
+          node.style.removeProperty('opacity');
+        });
+      }
+    });
+    if (!enabled) return;
+    if (!wasEnabled || playground.clientWidth !== width) layout();
+    if (!paused) frameId = requestAnimationFrame(tick);
+  }
+
+  const layoutObserver = new ResizeObserver(layout);
+  layoutObserver.observe(playground);
+  layoutObserver.observe(introCard);
+  layoutObserver.observe(introCard.querySelector('.intro-card__lead'));
+  new IntersectionObserver(([entry]) => {
+    visible = entry.isIntersecting;
+    updatePlayback();
+  }).observe(playground);
+  reducedMotionPreference.addEventListener('change', updatePlayback);
+  document.addEventListener('visibilitychange', updatePlayback);
+  updatePlayback();
+
+  return {
+    burst() {
+      if (flightPending || flightRunning) return;
+      if (reducedMotionPreference.matches) {
+        playground.animate([{ opacity: 0.65 }, { opacity: 1 }], { duration: 200 });
+        return;
+      }
+      ballButton.setAttribute('aria-busy', 'true');
+      flightPending = true;
+      updatePlayback();
+    },
+    setSpeaker(index, expression) {
+      if (index === null || index === undefined || index < 0 || index >= bodies.length) {
+        if (activeSpeaker) {
+          const prev = bodies[activeSpeaker.index];
+          if (prev) {
+            prev.element.classList.remove('is-speaking');
+            cursorFaceControllers.get(prev.element)?.setSpeaking(false);
+          }
+        }
+        activeSpeaker = null;
+        return;
+      }
+      if (activeSpeaker && activeSpeaker.index !== index) {
+        const prev = bodies[activeSpeaker.index];
+        if (prev) {
+          prev.element.classList.remove('is-speaking');
+          cursorFaceControllers.get(prev.element)?.setSpeaking(false);
+        }
+      }
+      activeSpeaker = { index, expression, startTime: elapsed };
+      const current = bodies[index];
+      if (current) {
+        current.element.classList.add('is-speaking');
+        cursorFaceControllers.get(current.element)?.setSpeaking(true, expression);
+      }
+    },
+    isFlightRunning() {
+      return flightRunning || flightPending;
+    }
+  };
+}
+
+const mascotPlayground = initializeMascotPlayground();
+
+function initializeMascotGreetings() {
+  const playground = introCard.querySelector('.intro-card__mascots');
+  const content = introCard.querySelector('.intro-card__content');
+  const mascots = [...playground.querySelectorAll('.cursor-face')];
+  if (!playground || !content || !mascots.length) return;
+
+  const GREETINGS = [
+    { text: 'Hi! 👋', expression: 'bright', duration: 2000 },
+    { text: 'Hello! ✨', expression: 'wonder', duration: 2000 },
+    { text: 'How are you?', expression: 'inquisitive', duration: 2400 },
+    { text: 'Welcome! 🙌', expression: 'bright', duration: 2000 },
+    { text: 'Nice to meet you!', expression: 'amused', duration: 2300 },
+    { text: 'Good to see you!', expression: 'delighted', duration: 2200 },
+    { text: 'Have a lovely day! 🌸', expression: 'bright', duration: 2400 }
+  ];
+
+  const bubble = document.createElement('span');
+  bubble.className = 'mascot-greeting';
+  bubble.setAttribute('role', 'status');
+  bubble.setAttribute('aria-live', 'polite');
+  content.append(bubble);
+
+  let currentIndex = 0;
+  let isShowing = false;
+  let isLeaving = false;
+  let isVisible = false;
+  let greetingsCompleted = false;
+  const spokenMascots = new Set();
+  let remainingMs = 850;
+  let previousTimestamp = null;
+  let timerId = null;
+  let positionRafId = null;
+
+  function positionBubble() {
+    if (!isShowing || currentIndex >= mascots.length) return;
+    const targetMascot = mascots[currentIndex];
+    if (!targetMascot) return;
+    const mascotRect = targetMascot.getBoundingClientRect();
+    const containerRect = content.getBoundingClientRect();
+    const centerX = mascotRect.left + mascotRect.width / 2 - containerRect.left;
+    const bubbleWidth = bubble.offsetWidth || 120;
+    const bubbleHeight = bubble.offsetHeight || 38;
+
+    const left = Math.max(12, Math.min(containerRect.width - bubbleWidth - 12, centerX - bubbleWidth / 2));
+    const top = Math.max(8, mascotRect.top - containerRect.top - bubbleHeight - 12);
+
+    bubble.style.left = `${left.toFixed(1)}px`;
+    bubble.style.top = `${top.toFixed(1)}px`;
+    bubble.style.setProperty('--greeting-tail', `${Math.max(14, Math.min(bubbleWidth - 14, centerX - left)).toFixed(1)}px`);
+  }
+
+  function startTracking() {
+    if (positionRafId !== null) return;
+    function loop() {
+      if (isShowing) {
+        positionBubble();
+        positionRafId = requestAnimationFrame(loop);
+      } else {
+        positionRafId = null;
+      }
+    }
+    positionRafId = requestAnimationFrame(loop);
+  }
+
+  function hideGreeting(onHidden) {
+    if (!isShowing) {
+      onHidden?.();
+      return;
+    }
+    isLeaving = true;
+    bubble.classList.remove('is-visible');
+    bubble.classList.add('is-leaving');
+    mascotPlayground.setSpeaker(null);
+
+    window.setTimeout(() => {
+      isLeaving = false;
+      isShowing = false;
+      bubble.classList.remove('is-leaving');
+      onHidden?.();
+    }, 200);
+  }
+
+  function showGreeting(index) {
+    if (index >= mascots.length || spokenMascots.has(index)) return;
+    currentIndex = index;
+    spokenMascots.add(index);
+    const item = GREETINGS[index] || { text: 'Hello!', expression: 'bright', duration: 2000 };
+
+    bubble.textContent = item.text;
+    isShowing = true;
+    isLeaving = false;
+    bubble.classList.remove('is-leaving');
+    bubble.classList.add('is-visible');
+
+    positionBubble();
+    startTracking();
+
+    mascotPlayground.setSpeaker(index, item.expression);
+    remainingMs = item.duration;
+  }
+
+  function step() {
+    window.clearTimeout(timerId);
+    timerId = null;
+
+    if (greetingsCompleted) return;
+
+    // Each mascot asks only once: if all have spoken, end the cycle cleanly
+    if (spokenMascots.size >= mascots.length) {
+      greetingsCompleted = true;
+      hideGreeting(() => {
+        bubble.remove();
+        mascotPlayground.setSpeaker(null);
+      });
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      return;
+    }
+
+    const now = performance.now();
+    const flightActive = mascotPlayground.isFlightRunning?.() || false;
+    const atHome = mascots.every((m) => m.parentElement === playground);
+
+    if (!isVisible || document.hidden || flightActive || !atHome) {
+      if (isShowing) {
+        hideGreeting();
+      }
+      previousTimestamp = null;
+      if (isVisible && !document.hidden) {
+        timerId = window.setTimeout(step, 120);
+      }
+      return;
+    }
+
+    if (previousTimestamp !== null) {
+      const dt = Math.min(250, now - previousTimestamp);
+      remainingMs -= dt;
+    }
+    previousTimestamp = now;
+
+    if (remainingMs <= 0) {
+      if (isShowing) {
+        hideGreeting(() => {
+          remainingMs = 420;
+          timerId = window.setTimeout(step, 50);
+        });
+        return;
+      } else {
+        let nextIndex = currentIndex;
+        while (nextIndex < mascots.length && spokenMascots.has(nextIndex)) {
+          nextIndex += 1;
+        }
+        if (nextIndex < mascots.length) {
+          showGreeting(nextIndex);
+        } else {
+          greetingsCompleted = true;
+          bubble.remove();
+          mascotPlayground.setSpeaker(null);
+          return;
+        }
+      }
+    }
+
+    timerId = window.setTimeout(step, 80);
+  }
+
+  function onVisibilityChange() {
+    step();
+  }
+
+  const observer = new IntersectionObserver(([entry]) => {
+    isVisible = entry.isIntersecting;
+    step();
+  }, { threshold: 0.15 });
+
+  observer.observe(playground);
+  document.addEventListener('visibilitychange', onVisibilityChange);
+
+  // Mascots interactivity:
+  // Clicking an unspoken mascot greets immediately.
+  // Clicking an already-greeted mascot triggers a cheerful wink/bounce without re-showing the speech bubble.
+  mascots.forEach((mascot, index) => {
+    mascot.style.cursor = 'pointer';
+    mascot.addEventListener('click', () => {
+      if (!spokenMascots.has(index) && !greetingsCompleted) {
+        hideGreeting(() => {
+          showGreeting(index);
+        });
+      } else {
+        cursorFaceControllers.get(mascot)?.cue({
+          key: `click-${index}-${Date.now()}`,
+          expression: 'wink',
+          x: 0,
+          y: -0.18
+        });
+      }
+    });
+  });
+}
+
+initializeMascotGreetings();
+
+/* ---------- Escape, bounce, fuse, and return ---------- */
+
+function runMascotFlight(elements, onComplete) {
+  const layer = document.createElement('div');
+  layer.className = 'mascot-flight-layer';
+  layer.setAttribute('aria-hidden', 'true');
+  const viewport = { width: window.innerWidth, height: window.innerHeight };
+  const parent = elements[0].parentElement;
+  const parentBounds = parent.getBoundingClientRect();
+  const pageShell = document.querySelector('.page-shell') || document.body;
+
+  // Dedicated canvas for explosive flash, shockwaves, sparks, and supersonic trails
+  const canvas = document.createElement('canvas');
+  canvas.className = 'mascot-flight-canvas';
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = viewport.width * dpr;
+  canvas.height = viewport.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  layer.append(canvas);
+
+  const blastCenter = {
+    x: parentBounds.left + parentBounds.width / 2,
+    y: parentBounds.top + parentBounds.height / 2
+  };
+
+  // Diverse radial launch angles so mascots blast across the entire screen!
+  const spreadAngles = [
+    -Math.PI * 0.78, // hard up-left
+    -Math.PI * 0.92, // violent left
+    -Math.PI * 0.62, // high arc left
+    -Math.PI * 0.50, // supersonic rocket straight up!
+    -Math.PI * 0.38, // high arc right
+    -Math.PI * 0.12, // violent right
+    -Math.PI * 0.25  // hard up-right
+  ];
+
+  const actors = elements.map((element, index) => {
+    const bounds = element.getBoundingClientRect();
+    const styles = getComputedStyle(element);
+    const savedStyle = element.getAttribute('style');
+    const angle = spreadAngles[index % spreadAngles.length] + (Math.random() - 0.5) * 0.18;
+    // Explosive supersonic blast speeds (2400 - 3400 px/s)
+    const speed = 2400 + (index % 3) * 420 + Math.random() * 320;
+    const colors = ['start', 'middle', 'end'].map((stop) => [
+      `--mascot-gradient-${stop}`,
+      styles.getPropertyValue(`--mascot-gradient-${stop}`).trim()
+    ]);
+    const width = parseFloat(element.style.width) || bounds.width;
+    const height = parseFloat(element.style.height) || bounds.height;
+    return {
+      element, savedStyle, colors, width, height,
+      homeX: bounds.left - parentBounds.left + bounds.width / 2,
+      homeY: bounds.top - parentBounds.top + bounds.height / 2,
+      x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2,
+      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      rotation: 0,
+      spin: (index % 2 ? -1 : 1) * (1100 + index * 180 + Math.random() * 250),
+      radius: Math.max(width, height) / 2 + 4,
+      trail: [],
+      mergeX: 0, mergeY: 0, mergeRotation: 0
+    };
+  });
+
+  document.body.append(layer);
+  actors.forEach((actor) => {
+    actor.colors.forEach(([property, value]) => {
+      if (value) actor.element.style.setProperty(property, value);
+    });
+    layer.append(actor.element);
+    cursorFaceControllers.get(actor.element)?.pause(false);
+  });
+
+  // VFX System: Sparks, Shockwaves, Flash, and Screen Trauma
+  const particles = [];
+  const shockwaves = [];
+  let flashOpacity = 0.95;
+  let shakeTrauma = 1.0; // Initial violent screen rock!
+  let fusedBurstSpawned = false;
+  let frameId = null;
+  let previousTime = null;
+  let elapsed = 0;
+  let finished = false;
+  let merging = false;
+  const center = { x: viewport.width / 2, y: viewport.height / 2 };
+  const fusedSize = Math.min(160, viewport.width * 0.35, viewport.height * 0.30);
+
+  const ease = (value) => {
+    const t = Math.max(0, Math.min(1, value));
+    return t * t * t * (t * (t * 6 - 15) + 10);
+  };
+
+  // 1. Initial detonation shockwaves
+  shockwaves.push({
+    x: blastCenter.x, y: blastCenter.y,
+    radius: 10, maxRadius: Math.max(viewport.width, viewport.height) * 0.95,
+    speed: 3400, color: 'rgba(255, 120, 255, 0.9)', lineWidth: 8, opacity: 1
+  });
+  shockwaves.push({
+    x: blastCenter.x, y: blastCenter.y,
+    radius: 5, maxRadius: Math.max(viewport.width, viewport.height) * 0.7,
+    speed: 2600, color: 'rgba(146, 91, 255, 0.95)', lineWidth: 5, opacity: 1
+  });
+
+  // 2. High-velocity explosive fiery sparks and embers
+  const sparkCount = 80;
+  for (let i = 0; i < sparkCount; i++) {
+    const a = (Math.PI * 2 * i) / sparkCount + (Math.random() - 0.5) * 0.35;
+    const spd = 700 + Math.random() * 2800;
+    const hues = [280, 310, 240, 45, 0];
+    const hue = hues[Math.floor(Math.random() * hues.length)];
+    particles.push({
+      x: blastCenter.x + (Math.random() - 0.5) * 40,
+      y: blastCenter.y + (Math.random() - 0.5) * 40,
+      vx: Math.cos(a) * spd,
+      vy: Math.sin(a) * spd,
+      gravity: 1400,
+      drag: 0.92,
+      size: 2.5 + Math.random() * 3.5,
+      life: 0.55 + Math.random() * 0.7,
+      maxLife: 0.55 + Math.random() * 0.7,
+      color: `hsl(${hue}, 100%, ${65 + Math.random() * 30}%)`
+    });
+  }
+
+  function spawnWallSparks(x, y, normalX, normalY) {
+    const count = 10;
+    for (let i = 0; i < count; i++) {
+      const baseAngle = Math.atan2(normalY, normalX);
+      const a = baseAngle + (Math.random() - 0.5) * 1.6;
+      const spd = 450 + Math.random() * 1600;
+      particles.push({
+        x, y,
+        vx: Math.cos(a) * spd,
+        vy: Math.sin(a) * spd,
+        gravity: 1500,
+        drag: 0.91,
+        size: 2.2 + Math.random() * 2.8,
+        life: 0.35 + Math.random() * 0.35,
+        maxLife: 0.35 + Math.random() * 0.35,
+        color: Math.random() > 0.4 ? '#ffffff' : '#c084fc'
+      });
+    }
+  }
+
+  // Rocks the entire portfolio using camera trauma decay!
+  function applyScreenShake(dt) {
+    if (shakeTrauma > 0.001) {
+      const shake = shakeTrauma * shakeTrauma;
+      const maxPixels = 24; // intense violent rocking!
+      const maxDegrees = 2.8;
+      const sx = (Math.random() * 2 - 1) * maxPixels * shake;
+      const sy = (Math.random() * 2 - 1) * maxPixels * shake;
+      const sRot = (Math.random() * 2 - 1) * maxDegrees * shake;
+      pageShell.style.transform = `translate3d(${sx.toFixed(2)}px, ${sy.toFixed(2)}px, 0) rotate(${sRot.toFixed(2)}deg)`;
+      shakeTrauma = Math.max(0, shakeTrauma - dt * 2.4);
+    } else if (pageShell.style.transform) {
+      pageShell.style.transform = '';
+    }
+  }
+
+  function keepInside(actor) {
+    const r = actor.radius;
+    let hit = false;
+    if (actor.x < r) {
+      actor.x = r;
+      actor.vx = Math.abs(actor.vx) * 0.95;
+      actor.spin *= -1;
+      spawnWallSparks(r, actor.y, 1, 0);
+      hit = true;
+    } else if (actor.x > viewport.width - r) {
+      actor.x = viewport.width - r;
+      actor.vx = -Math.abs(actor.vx) * 0.95;
+      actor.spin *= -1;
+      spawnWallSparks(viewport.width - r, actor.y, -1, 0);
+      hit = true;
+    }
+    if (actor.y < r) {
+      actor.y = r;
+      actor.vy = Math.abs(actor.vy) * 0.95;
+      actor.spin *= -1;
+      spawnWallSparks(actor.x, r, 0, 1);
+      hit = true;
+    } else if (actor.y > viewport.height - r) {
+      actor.y = viewport.height - r;
+      actor.vy = -Math.abs(actor.vy) * 0.95;
+      actor.spin *= -1;
+      spawnWallSparks(actor.x, viewport.height - r, 0, -1);
+      hit = true;
+    }
+    if (hit) {
+      // Violent wall impact tremor!
+      shakeTrauma = Math.min(1.0, shakeTrauma + 0.22);
+    }
+  }
+
+  function bounce(dt) {
+    actors.forEach((actor) => {
+      actor.x += actor.vx * dt;
+      actor.y += actor.vy * dt;
+      actor.rotation += actor.spin * dt;
+      keepInside(actor);
+
+      // Record comet trail
+      actor.trail.push({ x: actor.x, y: actor.y });
+      if (actor.trail.length > 5) actor.trail.shift();
+    });
+
+    for (let i = 0; i < actors.length; i += 1) {
+      for (let j = i + 1; j < actors.length; j += 1) {
+        const a = actors[i], b = actors[j];
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const distance = Math.hypot(dx, dy);
+        const overlap = a.radius + b.radius - distance;
+        if (overlap <= 0) continue;
+        const nx = distance > 0.001 ? dx / distance : 1;
+        const ny = distance > 0.001 ? dy / distance : 0;
+        a.x -= (nx * overlap) / 2; a.y -= (ny * overlap) / 2;
+        b.x += (nx * overlap) / 2; b.y += (ny * overlap) / 2;
+        const closingSpeed = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+        if (closingSpeed > 0) {
+          a.vx -= closingSpeed * nx; a.vy -= closingSpeed * ny;
+          b.vx += closingSpeed * nx; b.vy += closingSpeed * ny;
+          shakeTrauma = Math.min(1.0, shakeTrauma + 0.08);
+        }
+        keepInside(a); keepInside(b);
+      }
+    }
+  }
+
+  function renderVfx(dt) {
+    ctx.clearRect(0, 0, viewport.width, viewport.height);
+
+    // 1. Explosive Flash
+    if (flashOpacity > 0.01) {
+      const grad = ctx.createRadialGradient(blastCenter.x, blastCenter.y, 0, blastCenter.x, blastCenter.y, 500);
+      grad.addColorStop(0, `rgba(255, 255, 255, ${flashOpacity * 0.95})`);
+      grad.addColorStop(0.35, `rgba(230, 160, 255, ${flashOpacity * 0.65})`);
+      grad.addColorStop(0.75, `rgba(146, 91, 255, ${flashOpacity * 0.25})`);
+      grad.addColorStop(1, 'rgba(146, 91, 255, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, viewport.width, viewport.height);
+      flashOpacity = Math.max(0, flashOpacity - dt * 5.8);
+    }
+
+    // 2. Shockwaves
+    for (let i = shockwaves.length - 1; i >= 0; i--) {
+      const sw = shockwaves[i];
+      sw.radius += sw.speed * dt;
+      sw.opacity = Math.max(0, 1 - sw.radius / sw.maxRadius);
+      if (sw.opacity <= 0 || sw.radius >= sw.maxRadius) {
+        shockwaves.splice(i, 1);
+        continue;
+      }
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = sw.color;
+      ctx.globalAlpha = sw.opacity;
+      ctx.lineWidth = sw.lineWidth * sw.opacity;
+      ctx.shadowColor = sw.color;
+      ctx.shadowBlur = 18;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 3. Supersonic Comet Trails
+    actors.forEach((actor) => {
+      if (actor.trail.length > 1) {
+        ctx.save();
+        for (let j = 1; j < actor.trail.length; j++) {
+          const p1 = actor.trail[j - 1];
+          const p2 = actor.trail[j];
+          const alpha = (j / actor.trail.length) * 0.55;
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.strokeStyle = `rgba(192, 132, 252, ${alpha})`;
+          ctx.lineWidth = actor.width * 0.45 * (j / actor.trail.length);
+          ctx.lineCap = 'round';
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    });
+
+    // 4. Sparks and Shrapnel Particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.life -= dt;
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+        continue;
+      }
+      const prevX = p.x;
+      const prevY = p.y;
+      p.vy += p.gravity * dt;
+      p.vx *= p.drag ** (dt * 60);
+      p.vy *= p.drag ** (dt * 60);
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+
+      const alpha = Math.max(0, p.life / p.maxLife);
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(prevX, prevY);
+      ctx.lineTo(p.x, p.y);
+      ctx.strokeStyle = p.color;
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = p.size * alpha;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function paint(actor, x, y, width, rotation, opacity, phase) {
+    const height = (width * actor.height) / actor.width;
+    actor.element.style.width = `${width}px`;
+    actor.element.style.height = `${height}px`;
+    actor.element.style.opacity = String(opacity);
+
+    // Realistic supersonic motion stretch
+    let stretch = 1;
+    if (phase === 'bounce') {
+      const spd = Math.hypot(actor.vx, actor.vy);
+      stretch = Math.min(1.4, 1 + spd / 6800);
+    }
+    const invStretch = 1 / Math.sqrt(stretch);
+
+    actor.element.style.transform = `translate(${x - width / 2}px, ${y - height / 2}px) rotate(${rotation}deg) scale(${stretch.toFixed(3)}, ${invStretch.toFixed(3)})`;
+    const controller = cursorFaceControllers.get(actor.element);
+    const exp = phase === 'bounce' ? (Math.random() > 0.5 ? 'spin' : 'dizzy')
+      : phase === 'merge' ? 'wonder'
+      : phase === 'fused' ? 'delighted'
+      : 'bright';
+    controller?.cue({ key: `flight-${phase}`, expression: exp, x: 0, y: 0 });
+    if (latestMascotPointer) controller?.trackPointer({ left: x - width / 2, top: y - height / 2, width, height });
+  }
+
+  function finish() {
+    if (finished) return;
+    finished = true;
+    if (frameId !== null) cancelAnimationFrame(frameId);
+    window.removeEventListener('resize', finish);
+    pageShell.style.transform = '';
+
+    actors.forEach(({ element, savedStyle }) => {
+      parent.append(element);
+      if (savedStyle === null) element.removeAttribute('style');
+      else element.setAttribute('style', savedStyle);
+    });
+    layer.remove();
+    ballButton.removeAttribute('aria-busy');
+    onComplete();
+  }
+
+  // Pacing: Snappy, intense, real-feeling 2.6s total!
+  const CHAOS_END = 1.10;
+  const FUSION_BURST = 1.45;
+  const RETURN_START = 1.70;
+  const TOTAL_DURATION = 2.60;
+
+  function tick(now) {
+    const dt = previousTime === null ? 0 : Math.min(0.04, (now - previousTime) / 1000);
+    previousTime = now;
+    elapsed += dt;
+
+    // Apply portfolio shake and particle physics
+    applyScreenShake(dt);
+    renderVfx(dt);
+
+    if (elapsed >= TOTAL_DURATION) {
+      // Final solid landing settle tremor
+      shakeTrauma = 0.35;
+      finish();
+      return;
+    }
+
+    if (elapsed < CHAOS_END) {
+      let remaining = dt;
+      while (remaining > 0) {
+        const step = Math.min(1 / 180, remaining);
+        bounce(step);
+        remaining -= step;
+      }
+      actors.forEach((actor) => paint(actor, actor.x, actor.y, actor.width, actor.rotation, 1, 'bounce'));
+    } else {
+      if (!merging) {
+        merging = true;
+        actors.forEach((actor) => {
+          actor.mergeX = actor.x;
+          actor.mergeY = actor.y;
+          actor.mergeRotation = actor.rotation;
+        });
+      }
+
+      if (elapsed < FUSION_BURST) {
+        // High speed gravitational vortex suction
+        const progress = ease((elapsed - CHAOS_END) / (FUSION_BURST - CHAOS_END));
+        actors.forEach((actor, index) => {
+          const x = actor.mergeX + (center.x - actor.mergeX) * progress;
+          const y = actor.mergeY + (center.y - actor.mergeY) * progress;
+          const width = actor.width + ((index === 0 ? fusedSize : actor.width * 0.25) - actor.width) * progress;
+          paint(actor, x, y, width, actor.mergeRotation * (1 - progress),
+            index === 0 ? 1 : 1 - ease((progress - 0.5) / 0.5), 'merge');
+        });
+      } else if (elapsed < RETURN_START) {
+        // Fused Energy Singularity: Secondary Detonation Shockwave!
+        if (!fusedBurstSpawned) {
+          fusedBurstSpawned = true;
+          shakeTrauma = Math.min(1.0, shakeTrauma + 0.55); // Violent center concussion!
+          shockwaves.push({
+            x: center.x, y: center.y, radius: 10, maxRadius: 450,
+            speed: 2800, color: 'rgba(168, 85, 247, 0.95)', lineWidth: 7, opacity: 1
+          });
+          for (let i = 0; i < 35; i++) {
+            const a = (Math.PI * 2 * i) / 35;
+            const spd = 600 + Math.random() * 1400;
+            particles.push({
+              x: center.x, y: center.y,
+              vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+              gravity: 900, drag: 0.92, size: 3, life: 0.45, maxLife: 0.45, color: '#ffffff'
+            });
+          }
+        }
+        actors.forEach((actor, index) => {
+          paint(actor, center.x, center.y, index === 0 ? fusedSize : actor.width * 0.25, 0, index === 0 ? 1 : 0, 'fused');
+        });
+      } else {
+        // Hypersonic rocket return home and violent splitting
+        const progress = ease((elapsed - RETURN_START) / (TOTAL_DURATION - RETURN_START));
+        const home = parent.getBoundingClientRect();
+        actors.forEach((actor, index) => {
+          const x = center.x + (home.left + actor.homeX - center.x) * progress;
+          const y = center.y + (home.top + actor.homeY - center.y) * progress;
+          const startWidth = index === 0 ? fusedSize : actor.width * 0.25;
+          paint(actor, x, y, startWidth + (actor.width - startWidth) * progress,
+            0, index === 0 ? 1 : ease(progress / 0.35), 'return');
+        });
+      }
+    }
+    frameId = requestAnimationFrame(tick);
+  }
+
+  actors.forEach((actor) => paint(actor, actor.x, actor.y, actor.width, 0, 1, 'bounce'));
+  window.addEventListener('resize', finish);
+  frameId = requestAnimationFrame(tick);
+  return finish;
 }
 
 
@@ -2613,253 +3695,11 @@ if (initialProjectMatch) {
   showCardDetail(initialProjectMatch[1], projectTitle, false);
 }
 
-/* ---------- Playful falling mascots ---------- */
-
-function createFallingMascot(index) {
-  const mascot = cursorFaceAsset.cloneNode(true);
-  const definitionSuffix = `falling-mascot-${Date.now()}-${index}`;
-  const definitionIds = new Map();
-
-  mascot.classList.remove('cursor-face__svg');
-  mascot.classList.add('falling-ball__mascot');
-  mascot.removeAttribute('style');
-  mascot.style.setProperty(
-    '--falling-mascot-blink-duration',
-    `${1800 + Math.random() * 1200}ms`
-  );
-  mascot.style.setProperty(
-    '--falling-mascot-blink-delay',
-    `${-Math.random() * 2600}ms`
-  );
-
-  // SVG definition IDs must be unique when many mascot copies share the page.
-  mascot.querySelectorAll('[id]').forEach((definition) => {
-    const originalId = definition.id;
-    const uniqueId = `${originalId}-${definitionSuffix}`;
-    definitionIds.set(originalId, uniqueId);
-    definition.id = uniqueId;
-  });
-
-  mascot.querySelectorAll('*').forEach((node) => {
-    ['fill', 'stroke', 'clip-path', 'mask', 'filter'].forEach((attributeName) => {
-      const attributeValue = node.getAttribute(attributeName);
-      if (!attributeValue) return;
-
-      definitionIds.forEach((uniqueId, originalId) => {
-        node.setAttribute(
-          attributeName,
-          node.getAttribute(attributeName).replace(`url(#${originalId})`, `url(#${uniqueId})`)
-        );
-      });
-    });
-  });
-
-  // The intro mascot may be mid-expression when the button is pressed. Reset
-  // each falling copy before its own independent blink animation begins.
-  mascot.querySelectorAll('.cursor-face__eyes, .cursor-face__blink, .cursor-face__eye')
-    .forEach((node) => {
-      node.removeAttribute('style');
-      node.classList.remove('is-blinking');
-    });
-
-  return mascot;
-}
-
-function dropBalls(onComplete) {
-  const layer = document.createElement('div');
-  const prefersReducedMotion = reducedMotionPreference.matches;
-  const ballCount = prefersReducedMotion ? 10 : 30;
-  const ballSize = 34;
-  const balls = [];
-  const burstStartsAt = prefersReducedMotion ? 1500 : 4050;
-  const burstStagger = prefersReducedMotion ? 160 : 480;
-  const animationEndsAt = prefersReducedMotion ? 1900 : 5300;
-  const startedAt = performance.now();
-  let previousFrame = startedAt;
-
-  layer.className = 'falling-ball-layer';
-  layer.setAttribute('aria-hidden', 'true');
-  document.body.append(layer);
-
-  for (let index = 0; index < ballCount; index += 1) {
-    const element = document.createElement('span');
-    const size = ballSize;
-    const hue = Math.floor(Math.random() * 360);
-
-    element.className = 'falling-ball';
-    element.style.setProperty('--ball-size', `${size}px`);
-    element.append(createFallingMascot(index));
-    layer.append(element);
-
-    balls.push({
-      element,
-      size,
-      hue,
-      x: Math.random() * Math.max(1, window.innerWidth - size),
-      y: -size - Math.random() * window.innerHeight * 0.45,
-      velocityX: (Math.random() - 0.5) * 230,
-      velocityY: 40 + Math.random() * 120,
-      rotation: Math.random() * 180,
-      rotationSpeed: (Math.random() - 0.5) * 240,
-      bounce: 0.56 + Math.random() * 0.16,
-      explodeAt: burstStartsAt + Math.random() * burstStagger,
-      exploded: false
-    });
-  }
-
-  function explodeBall(ball) {
-    const burst = document.createElement('span');
-    const ring = document.createElement('span');
-    const particleCount = prefersReducedMotion ? 5 : 9;
-
-    burst.className = 'ball-burst';
-    burst.style.transform = `translate3d(${ball.x + ball.size / 2}px, ${ball.y + ball.size / 2}px, 0)`;
-    burst.style.setProperty('--burst-color', `hsl(${ball.hue} 88% 62% / 0.76)`);
-    ring.className = 'ball-burst__ring';
-    burst.append(ring);
-
-    for (let index = 0; index < particleCount; index += 1) {
-      const particle = document.createElement('span');
-      const angle = (360 / particleCount) * index + (Math.random() - 0.5) * 22;
-
-      particle.className = 'ball-burst__particle';
-      particle.style.setProperty('--particle-angle', `${angle}deg`);
-      particle.style.setProperty('--particle-distance', `${30 + Math.random() * 30}px`);
-      particle.style.setProperty('--particle-spin', `${120 + Math.random() * 300}deg`);
-      particle.style.setProperty(
-        '--particle-color',
-        `hsl(${ball.hue} 90% ${62 + Math.random() * 18}% / 0.88)`
-      );
-      burst.append(particle);
-    }
-
-    ball.exploded = true;
-    ball.element.remove();
-    layer.append(burst);
-    window.setTimeout(() => burst.remove(), 700);
-  }
-
-  function getVisibleCardBounds() {
-    return [...document.querySelectorAll('.card')]
-      .map((card) => card.getBoundingClientRect())
-      .filter((bounds) => (
-        bounds.width > 0
-        && bounds.height > 0
-        && bounds.right > 0
-        && bounds.left < window.innerWidth
-        && bounds.bottom > 0
-        && bounds.top < window.innerHeight
-      ));
-  }
-
-  function resolveCardCollision(ball, previousX, previousY, cardBounds) {
-    const ballRight = ball.x + ball.size;
-    const ballBottom = ball.y + ball.size;
-    const overlapsCard = ballRight > cardBounds.left
-      && ball.x < cardBounds.right
-      && ballBottom > cardBounds.top
-      && ball.y < cardBounds.bottom;
-
-    if (!overlapsCard) return;
-
-    const previousRight = previousX + ball.size;
-    const previousBottom = previousY + ball.size;
-
-    if (previousBottom <= cardBounds.top && ball.velocityY > 0) {
-      ball.y = cardBounds.top - ball.size;
-      ball.velocityY *= -ball.bounce;
-      ball.velocityX *= 0.94;
-      return;
-    }
-
-    if (previousY >= cardBounds.bottom && ball.velocityY < 0) {
-      ball.y = cardBounds.bottom;
-      ball.velocityY *= -ball.bounce;
-      return;
-    }
-
-    if (previousRight <= cardBounds.left && ball.velocityX > 0) {
-      ball.x = cardBounds.left - ball.size;
-      ball.velocityX *= -0.72;
-      return;
-    }
-
-    if (previousX >= cardBounds.right && ball.velocityX < 0) {
-      ball.x = cardBounds.right;
-      ball.velocityX *= -0.72;
-    }
-  }
-
-  let visibleCardBounds = getVisibleCardBounds();
-  let collisionBoundsFrame = 0;
-
-  function animateBalls(now) {
-    const elapsed = now - startedAt;
-    const delta = Math.min((now - previousFrame) / 1000, 0.034);
-    const floor = window.innerHeight;
-    previousFrame = now;
-
-    // Refresh periodically so collisions follow horizontal grid movement without
-    // forcing a layout measurement for every animation frame.
-    collisionBoundsFrame += 1;
-    if (collisionBoundsFrame % 6 === 0) {
-      visibleCardBounds = getVisibleCardBounds();
-    }
-
-    balls.forEach((ball) => {
-      if (ball.exploded) return;
-
-      const previousX = ball.x;
-      const previousY = ball.y;
-
-      ball.velocityY += 1350 * delta;
-      ball.x += ball.velocityX * delta;
-      ball.y += ball.velocityY * delta;
-      ball.rotation += ball.rotationSpeed * delta;
-
-      visibleCardBounds.forEach((cardBounds) => {
-        resolveCardCollision(ball, previousX, previousY, cardBounds);
-      });
-
-      if (ball.x <= 0 || ball.x + ball.size >= window.innerWidth) {
-        ball.x = clamp(ball.x, 0, window.innerWidth - ball.size);
-        ball.velocityX *= -0.72;
-      }
-
-      if (ball.y + ball.size >= floor) {
-        ball.y = floor - ball.size;
-        ball.velocityY *= -ball.bounce;
-        ball.velocityX *= 0.92;
-        ball.rotationSpeed *= 0.9;
-      }
-
-      ball.element.style.transform = `translate3d(${ball.x}px, ${ball.y}px, 0) rotate(${ball.rotation}deg)`;
-
-      if (elapsed >= ball.explodeAt) {
-        explodeBall(ball);
-      }
-    });
-
-    if (elapsed < animationEndsAt) {
-      requestAnimationFrame(animateBalls);
-    } else {
-      layer.remove();
-      onComplete();
-    }
-  }
-
-  requestAnimationFrame(animateBalls);
-}
-
-let isBallEffectRunning = false;
+/* ---------- Expand the intro mascots ---------- */
 
 ballButton.addEventListener('click', () => {
-  if (isBallEffectRunning) return;
-
-  isBallEffectRunning = true;
-  dropBalls(() => {
-    isBallEffectRunning = false;
-  });
+  centerGrid(0, false);
+  mascotPlayground.burst();
 });
 
 /* ---------- Smooth horizontal wheel scrolling ---------- */

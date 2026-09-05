@@ -120,8 +120,8 @@
           <button
             class="ball-control"
             type="button"
-            aria-label="Drop playful mascots"
-            title="Drop mascots"
+            aria-label="Release the mascots for a bouncing adventure"
+            title="Release the mascots"
           >
             <video
               class="ball-control__orb-video"
@@ -150,40 +150,155 @@
             <canvas class="intro-card__particles" aria-hidden="true"></canvas>
 
             <div class="intro-card__content">
-              <div class="cursor-face" aria-hidden="true">
-                <svg
-                  class="cursor-face__svg"
-                  viewBox="0 0 135 135"
-                  xmlns="http://www.w3.org/2000/svg"
-                  focusable="false"
-                >
-                  <defs>
-                    <clipPath id="intro-cursor-face-boundary">
-                      <circle cx="67.5" cy="67.5" r="65" />
-                    </clipPath>
-                  </defs>
-                  <circle
-                    class="cursor-face__head"
-                    cx="67.5"
-                    cy="67.5"
-                    r="65"
-                    fill="#080808"
-                  />
-                  <g clip-path="url(#intro-cursor-face-boundary)">
-                    <g class="cursor-face__eyes">
-                      <g class="cursor-face__blink">
-                        <use
-                          class="cursor-face__eye cursor-face__eye--left"
-                          href="assets/svg/face.svg#cursor-face-left-eye-shape"
-                        />
-                        <use
-                          class="cursor-face__eye cursor-face__eye--right"
-                          href="assets/svg/face.svg#cursor-face-right-eye-shape"
-                        />
+              <div class="intro-card__mascots">
+                <div class="cursor-face" aria-hidden="true">
+                  <svg
+                    class="cursor-face__svg" preserveAspectRatio="xMidYMax meet"
+                    viewBox="0 0 135 135"
+                    xmlns="http://www.w3.org/2000/svg"
+                    focusable="false"
+                  >
+                    <defs>
+                      <linearGradient id="intro-mascot-gradient-0" x1="0%" y1="0%" x2="25%" y2="100%">
+                        <stop class="cursor-face__gradient-start" offset="0%" stop-color="#ffbfff" />
+                        <stop class="cursor-face__gradient-middle" offset="52%" stop-color="#925bff" />
+                        <stop class="cursor-face__gradient-end" offset="100%" stop-color="#1103ff" />
+                      </linearGradient>
+                      <clipPath id="intro-cursor-face-boundary">
+                        <circle cx="67.5" cy="67.5" r="65" />
+                      </clipPath>
+                    </defs>
+                    <circle
+                      class="cursor-face__head"
+                      cx="67.5"
+                      cy="67.5"
+                      r="65"
+                      fill="url(#intro-mascot-gradient-0)"
+                    />
+                    <g clip-path="url(#intro-cursor-face-boundary)">
+                      <g class="cursor-face__eyes">
+                        <g class="cursor-face__blink">
+                          <rect
+                            class="cursor-face__eye cursor-face__eye--left"
+                            x="46.5" y="52.67" width="10.05" height="28.78" rx="4" fill="white"
+                          />
+                          <rect
+                            class="cursor-face__eye cursor-face__eye--right"
+                            x="78.5" y="52.67" width="10.05" height="28.78" rx="4" fill="white"
+                          />
+                        </g>
                       </g>
                     </g>
-                  </g>
-                </svg>
+                  </svg>
+                </div>
+                <div class="cursor-face" data-mascot="face1" aria-hidden="true">
+                  <svg class="cursor-face__svg" preserveAspectRatio="xMidYMax meet" viewBox="0 0 135 135" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                    <defs>
+                      <linearGradient id="intro-mascot-gradient-1" x1="0%" y1="0%" x2="25%" y2="100%">
+                        <stop class="cursor-face__gradient-start" offset="0%" stop-color="#ffbfff" />
+                        <stop class="cursor-face__gradient-middle" offset="52%" stop-color="#925bff" />
+                        <stop class="cursor-face__gradient-end" offset="100%" stop-color="#1103ff" />
+                      </linearGradient>
+                    <clipPath id="intro-face1-boundary"><circle cx="67.0587" cy="67.0587" r="67.0587" fill="black"/></clipPath></defs>
+                    <g class="cursor-face__head"><circle cx="67.0587" cy="67.0587" r="67.0587" fill="url(#intro-mascot-gradient-1)"/></g>
+                    <g clip-path="url(#intro-face1-boundary)">
+                      <g class="cursor-face__eyes"><g class="cursor-face__blink">
+                        <g class="cursor-face__eye cursor-face__eye--left"><rect x="71.1821" y="32.3995" width="10.0502" height="28.7802" rx="5.02509" transform="rotate(13.7703 71.1821 32.3995)" fill="white"/></g>
+                        <g class="cursor-face__eye cursor-face__eye--right"><rect x="106.882" y="34.7917" width="10.0502" height="28.7802" rx="5.02509" transform="rotate(13.7703 106.882 34.7917)" fill="white"/></g>
+                      </g></g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="cursor-face" data-mascot="face2" aria-hidden="true">
+                  <svg class="cursor-face__svg" preserveAspectRatio="xMidYMax meet" viewBox="0 0 129 97" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                    <defs>
+                      <linearGradient id="intro-mascot-gradient-2" x1="0%" y1="0%" x2="25%" y2="100%">
+                        <stop class="cursor-face__gradient-start" offset="0%" stop-color="#ffbfff" />
+                        <stop class="cursor-face__gradient-middle" offset="52%" stop-color="#925bff" />
+                        <stop class="cursor-face__gradient-end" offset="100%" stop-color="#1103ff" />
+                      </linearGradient>
+                    <clipPath id="intro-face2-boundary"><rect width="128.452" height="96.1559" rx="23" fill="black"/></clipPath></defs>
+                    <g class="cursor-face__head"><rect width="128.452" height="96.1559" rx="23" fill="url(#intro-mascot-gradient-2)"/></g>
+                    <g clip-path="url(#intro-face2-boundary)">
+                      <g class="cursor-face__eyes"><g class="cursor-face__blink">
+                        <g class="cursor-face__eye cursor-face__eye--left"><rect x="49.4777" y="32.9054" width="10.0502" height="28.7802" rx="5.02509" transform="rotate(13.7703 49.4777 32.9054)" fill="white"/></g>
+                        <g class="cursor-face__eye cursor-face__eye--right"><rect x="81.6141" y="32.9054" width="10.0502" height="28.7802" rx="5.02509" transform="rotate(13.7703 81.6141 32.9054)" fill="white"/></g>
+                      </g></g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="cursor-face" data-mascot="face3" aria-hidden="true">
+                  <svg class="cursor-face__svg" preserveAspectRatio="xMidYMax meet" viewBox="0 0 129 97" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                    <defs>
+                      <linearGradient id="intro-mascot-gradient-3" x1="0%" y1="0%" x2="25%" y2="100%">
+                        <stop class="cursor-face__gradient-start" offset="0%" stop-color="#ffbfff" />
+                        <stop class="cursor-face__gradient-middle" offset="52%" stop-color="#925bff" />
+                        <stop class="cursor-face__gradient-end" offset="100%" stop-color="#1103ff" />
+                      </linearGradient>
+                    <clipPath id="intro-face3-boundary"><rect width="128.452" height="96.1559" rx="48.078" fill="black"/></clipPath></defs>
+                    <g class="cursor-face__head"><rect width="128.452" height="96.1559" rx="48.078" fill="url(#intro-mascot-gradient-3)"/></g>
+                    <g clip-path="url(#intro-face3-boundary)">
+                      <g class="cursor-face__eyes"><g class="cursor-face__blink">
+                        <g class="cursor-face__eye cursor-face__eye--left"><rect x="49.4777" y="32.9054" width="10.0502" height="28.7802" rx="5.02509" transform="rotate(13.7703 49.4777 32.9054)" fill="white"/></g>
+                        <g class="cursor-face__eye cursor-face__eye--right"><rect x="81.6141" y="32.9054" width="10.0502" height="28.7802" rx="5.02509" transform="rotate(13.7703 81.6141 32.9054)" fill="white"/></g>
+                      </g></g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="cursor-face" data-mascot="face4" aria-hidden="true">
+                  <svg class="cursor-face__svg" preserveAspectRatio="xMidYMax meet" viewBox="0 0 137 84" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                    <defs>
+                      <linearGradient id="intro-mascot-gradient-4" x1="0%" y1="0%" x2="25%" y2="100%">
+                        <stop class="cursor-face__gradient-start" offset="0%" stop-color="#ffbfff" />
+                        <stop class="cursor-face__gradient-middle" offset="52%" stop-color="#925bff" />
+                        <stop class="cursor-face__gradient-end" offset="100%" stop-color="#1103ff" />
+                      </linearGradient>
+                    <clipPath id="intro-face4-boundary"><path d="M59.8252 0C72.61 8.38866e-05 83.3401 8.78706 86.3125 20.6504C89.3694 19.467 92.6923 18.8174 96.167 18.8174C109.849 18.8174 121.181 28.8797 123.166 42.0078C130.967 45.2261 136.457 52.9057 136.457 61.8682C136.457 73.253 127.598 82.5667 116.397 83.2959V83.3555H26.2197V83.3203C11.6425 82.7493 0 70.7533 0 56.0361C0.000131944 40.9547 12.2262 28.7285 27.3076 28.7285C29.1135 28.7285 30.8781 28.9057 32.5859 29.2402C32.5413 28.6019 32.5176 27.9573 32.5176 27.3076C32.5178 12.2263 44.7438 0 59.8252 0Z" fill="black"/></clipPath></defs>
+                    <g class="cursor-face__head"><path d="M59.8252 0C72.61 8.38866e-05 83.3401 8.78706 86.3125 20.6504C89.3694 19.467 92.6923 18.8174 96.167 18.8174C109.849 18.8174 121.181 28.8797 123.166 42.0078C130.967 45.2261 136.457 52.9057 136.457 61.8682C136.457 73.253 127.598 82.5667 116.397 83.2959V83.3555H26.2197V83.3203C11.6425 82.7493 0 70.7533 0 56.0361C0.000131944 40.9547 12.2262 28.7285 27.3076 28.7285C29.1135 28.7285 30.8781 28.9057 32.5859 29.2402C32.5413 28.6019 32.5176 27.9573 32.5176 27.3076C32.5178 12.2263 44.7438 0 59.8252 0Z" fill="url(#intro-mascot-gradient-4)"/></g>
+                    <g clip-path="url(#intro-face4-boundary)">
+                      <g class="cursor-face__eyes"><g class="cursor-face__blink">
+                        <g class="cursor-face__eye cursor-face__eye--left"><rect x="58.4672" y="38.1979" width="10.0502" height="28.7802" rx="5.02509" transform="rotate(13.7703 58.4672 38.1979)" fill="white"/></g>
+                        <g class="cursor-face__eye cursor-face__eye--right"><rect x="82.8413" y="38.1979" width="10.0502" height="28.7802" rx="5.02509" transform="rotate(13.7703 82.8413 38.1979)" fill="white"/></g>
+                      </g></g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="cursor-face" data-mascot="face5" aria-hidden="true">
+                  <svg class="cursor-face__svg" preserveAspectRatio="xMidYMax meet" viewBox="0 0 111 87" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                    <defs>
+                      <linearGradient id="intro-mascot-gradient-5" x1="0%" y1="0%" x2="25%" y2="100%">
+                        <stop class="cursor-face__gradient-start" offset="0%" stop-color="#ffbfff" />
+                        <stop class="cursor-face__gradient-middle" offset="52%" stop-color="#925bff" />
+                        <stop class="cursor-face__gradient-end" offset="100%" stop-color="#1103ff" />
+                      </linearGradient>
+                    <clipPath id="intro-face5-boundary"><path d="M24.8569 86.1016C3.94086 86.1016 -7.58912 61.8092 5.63578 45.6049L35.4099 9.12291C45.2318 -2.91182 63.5718 -3.06297 73.5908 8.80827L104.38 45.2901C117.994 61.4205 106.528 86.1015 85.4205 86.1015L24.8569 86.1016Z" fill="black"/></clipPath></defs>
+                    <g class="cursor-face__head"><path d="M24.8569 86.1016C3.94086 86.1016 -7.58912 61.8092 5.63578 45.6049L35.4099 9.12291C45.2318 -2.91182 63.5718 -3.06297 73.5908 8.80827L104.38 45.2901C117.994 61.4205 106.528 86.1015 85.4205 86.1015L24.8569 86.1016Z" fill="url(#intro-mascot-gradient-5)"/></g>
+                    <g clip-path="url(#intro-face5-boundary)">
+                      <g class="cursor-face__eyes"><g class="cursor-face__blink">
+                        <g class="cursor-face__eye cursor-face__eye--left"><rect x="37.6154" y="32.905" width="10.0502" height="28.7802" rx="5.02509" transform="rotate(13.7703 37.6154 32.905)" fill="white"/></g>
+                        <g class="cursor-face__eye cursor-face__eye--right"><rect x="69.7518" y="32.905" width="10.0502" height="28.7802" rx="5.02509" transform="rotate(13.7703 69.7518 32.905)" fill="white"/></g>
+                      </g></g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="cursor-face" data-mascot="face6" aria-hidden="true">
+                  <svg class="cursor-face__svg" preserveAspectRatio="xMidYMax meet" viewBox="0 0 119 119" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                    <defs>
+                      <linearGradient id="intro-mascot-gradient-6" x1="0%" y1="0%" x2="25%" y2="100%">
+                        <stop class="cursor-face__gradient-start" offset="0%" stop-color="#ffbfff" />
+                        <stop class="cursor-face__gradient-middle" offset="52%" stop-color="#925bff" />
+                        <stop class="cursor-face__gradient-end" offset="100%" stop-color="#1103ff" />
+                      </linearGradient>
+                    <clipPath id="intro-face6-boundary"><path d="M6.73654 76.253C-2.24551 67.2709 -2.24551 52.7081 6.73654 43.7261L43.726 6.73655C52.7081 -2.24551 67.2709 -2.24552 76.253 6.73654L111.851 42.3346C120.833 51.3167 120.833 65.8795 111.851 74.8615L74.8615 111.851C65.8795 120.833 51.3167 120.833 42.3346 111.851L6.73654 76.253Z" fill="black"/></clipPath></defs>
+                    <g class="cursor-face__head"><path d="M6.73654 76.253C-2.24551 67.2709 -2.24551 52.7081 6.73654 43.7261L43.726 6.73655C52.7081 -2.24551 67.2709 -2.24552 76.253 6.73654L111.851 42.3346C120.833 51.3167 120.833 65.8795 111.851 74.8615L74.8615 111.851C65.8795 120.833 51.3167 120.833 42.3346 111.851L6.73654 76.253Z" fill="url(#intro-mascot-gradient-6)"/></g>
+                    <g clip-path="url(#intro-face6-boundary)">
+                      <g class="cursor-face__eyes"><g class="cursor-face__blink">
+                        <g class="cursor-face__eye cursor-face__eye--left"><rect x="35.5812" y="43.0994" width="10.0502" height="28.7802" rx="5.02509" transform="rotate(13.7703 35.5812 43.0994)" fill="white"/></g>
+                        <g class="cursor-face__eye cursor-face__eye--right"><rect x="67.7177" y="43.0994" width="10.0502" height="28.7802" rx="5.02509" transform="rotate(13.7703 67.7177 43.0994)" fill="white"/></g>
+                      </g></g>
+                    </g>
+                  </svg>
+                </div>
               </div>
               <h1>Jatin Davis</h1>
               <p class="intro-card__lead">
